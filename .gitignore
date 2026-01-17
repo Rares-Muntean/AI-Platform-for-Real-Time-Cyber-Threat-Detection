@@ -1,0 +1,16 @@
+# Visual Studio files
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Bb]in/
+[Oo]bj/
+
+# Python 
+__pycache__/
+*.py[cod]
+venv/
+.env
