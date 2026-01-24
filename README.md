@@ -7,7 +7,7 @@
 
 ## Overview
 
-**VELOX** is a modern cybersecurity platform designed to detect network anomalies and potential threats in real-time using Artificial Intelligence. Unlike traditional rule-based firewalls, VeloSentry leverages Machine Learning to analyze network traffic patterns, filter false positives, and adapt based on user feedback.
+**VELOX** is a modern cybersecurity platform designed to detect network anomalies and potential threats in real-time using Artificial Intelligence. Unlike traditional rule-based firewalls, Velox leverages Machine Learning to analyze network traffic patterns, filter false positives, and adapt based on user feedback.
 
 The system is composed of a decoupled microservices architecture featuring a high-performance Python detection engine that also includes the model for AI, a robust ASP.NET Core API, and a reactive Nuxt.js frontend.
 
