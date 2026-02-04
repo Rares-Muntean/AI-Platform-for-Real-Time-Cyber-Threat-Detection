@@ -1,0 +1,35 @@
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 62.5%;
+}
+
+html,
+body {
+    background-color: $primaryBackgroundColor;
+    color: $whiteTextColor;
+    font-family: "SpaceGrotesk";
+}
+
+.btn-primary {
+    border-style: none;
+    border-radius: 3px;
+
+    color: $primaryBackgroundColor;
+    background-color: $primaryColor;
+
+    padding: 8px 18px;
+
+    font-family: inherit;
+    font-weight: 500;
+    font-size: $defaultFontSize;
+    letter-spacing: -0.2px;
+
+    &.stretched {
+        width: 100%;
+    }
+}

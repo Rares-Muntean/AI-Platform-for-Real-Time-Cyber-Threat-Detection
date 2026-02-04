@@ -1,0 +1,33 @@
+.icon-text {
+    font-size: 1.6rem;
+    font-weight: 800;
+}
+
+.title {
+    font-weight: 400;
+    font-size: $bigFontSize;
+}
+
+.description {
+    color: $whiteText70;
+    font-size: $defaultFontSize;
+}
+
+form input {
+    border-style: none;
+    border-radius: $defaultBorderRadius;
+
+    background-color: #383838;
+    box-shadow: inset 0 4px 4px rgba($color: #000000, $alpha: 0.15);
+    padding: 1.2rem;
+}
+
+.login-redirect {
+    color: $whiteText70;
+    font-size: $defaultFontSize;
+
+    a {
+        text-decoration: underline;
+        color: inherit;
+    }
+}
