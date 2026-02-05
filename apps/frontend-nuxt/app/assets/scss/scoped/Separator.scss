@@ -1,0 +1,9 @@
+.separator {
+    height: 2px;
+    background: linear-gradient(
+        to right,
+        $primaryColor,
+        $primaryBackgroundColor
+    );
+    border-radius: 3px;
+}
