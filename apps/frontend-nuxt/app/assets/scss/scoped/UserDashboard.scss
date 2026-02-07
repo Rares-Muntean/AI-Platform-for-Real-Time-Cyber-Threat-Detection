@@ -1,0 +1,172 @@
+$anomalyChartHeight: 280px;
+
+.section {
+    height: 100dvh;
+    width: 100%;
+
+    display: grid;
+    grid-template-columns: 250px 1fr;
+}
+
+////////////////////////////
+// LEFT PANEL //
+////////////////////////////
+.left-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 2.4rem;
+
+    padding: 4.4rem 3.2rem;
+}
+
+.sidenav-container {
+    display: flex;
+    flex-direction: column;
+
+    gap: 3.2rem;
+}
+
+.logo-container {
+    display: flex;
+    flex-direction: column;
+
+    gap: 2rem;
+}
+
+.logo-wrapper {
+    display: flex;
+    gap: 1rem;
+}
+
+.logo-icon {
+    width: 3.8rem;
+}
+
+.icon-text {
+    font-size: 1.8rem;
+    font-weight: 500;
+}
+
+.nav-group {
+    display: flex;
+    flex-direction: column;
+    font-size: 1.6rem;
+
+    gap: 1.4rem;
+}
+
+.nav-title {
+    opacity: 0.7;
+}
+
+.items {
+    display: flex;
+    flex-direction: column;
+
+    gap: 0.6rem;
+}
+
+.item {
+    display: flex;
+    padding: 0.6rem 1.2rem;
+    border-radius: 3px;
+    cursor: pointer;
+
+    gap: 1rem;
+
+    img {
+        width: 20px;
+        height: 20px;
+
+        filter: brightness(0) invert(1);
+    }
+
+    &.selected {
+        background-color: $primaryColor15;
+    }
+}
+
+////////////////////////////
+// RIGHT  PANEL //
+////////////////////////////
+.right-panel {
+    padding: 4.4rem 3.2rem;
+    padding-right: 8rem;
+
+    display: flex;
+    flex-direction: column;
+    gap: 2.2rem;
+}
+
+.panel-title {
+    font-size: 2.8rem;
+    font-weight: 500;
+}
+
+.anomaly-history {
+    border-radius: 4px;
+    border: solid 2px $whiteText20;
+
+    padding: 1.6rem 1.8rem;
+}
+
+.chart-title {
+    font-size: 1.8rem;
+    font-weight: 500;
+    margin-bottom: 2rem;
+}
+
+.chart-container {
+    display: flex;
+    gap: 1rem;
+
+    height: $anomalyChartHeight;
+}
+
+.y-axis {
+    display: flex;
+    flex-direction: column;
+
+    font-size: 1.6rem;
+    color: $whiteText70;
+    font-weight: 500;
+
+    justify-content: space-between;
+}
+
+y-axis span {
+    height: 20px;
+}
+
+.chart-area {
+    position: relative;
+    flex-grow: 1;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.grid-lines {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    height: 100%;
+}
+
+.line {
+    display: flex;
+    align-items: center;
+    height: 20px;
+}
+
+.line::after {
+    content: "";
+    height: 1px;
+    width: 100%;
+    background-color: $whiteText20;
+}
