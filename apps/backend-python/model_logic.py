@@ -8,16 +8,20 @@ class Autoencoder(nn.Module):
          super(Autoencoder, self).__init__()
 
          self.encoder = nn.Sequential(
-             nn.Linear(input_dim, 8),
+             nn.Linear(input_dim, 16),
+             nn.BatchNorm1d(16),
              nn.ReLU(),
-             nn.Linear(8, 2),
-             nn.ReLU()
+             nn.Linear(16, 8),
+             nn.ReLU(),
+             nn.Linear(8, 3),
          )
 
          self.decoder = nn.Sequential(
-             nn.Linear(2, 8),
+             nn.Linear(3, 8),
              nn.ReLU(),
-             nn.Linear(8, input_dim),
+             nn.Linear(8, 16),
+             nn.ReLU(),
+             nn.Linear(16, input_dim),
              nn.Sigmoid()
          )
 
@@ -27,7 +31,7 @@ class Autoencoder(nn.Module):
          return x
 
 class CyberAI:
-    def __init__(self, input_dim = 4):
+    def __init__(self, input_dim = 10):
         self.model = Autoencoder(input_dim)
         self.scaler = None
         self.threshold  = 0.0
