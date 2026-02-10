@@ -8,22 +8,22 @@ from sklearn.preprocessing import MinMaxScaler
 from model_logic import CyberAI
 
 # SEED = random.randrange(21000)
-SEED = 2
-print(f"Training seed: {SEED}")
-
-random.seed(SEED)
-np.random.seed(SEED)
-torch.manual_seed(SEED)
-torch.cuda.manual_seed_all(SEED)
+# SEED = 2
+# print(f"Training seed: {SEED}")
+#
+# random.seed(SEED)
+# np.random.seed(SEED)
+# torch.manual_seed(SEED)
+# torch.cuda.manual_seed_all(SEED)
 
 df = pd.read_csv("datasets/master_normal_traffic.csv")
-data = df[["dest_port", "packet_size", "time_delta", "is_syn", "is_ack", "is_rst", "is_fin", "ttl", "tcp_window", "payload_len"]].values
+data = df[["dest_port", "packet_size", "time_delta", "is_syn", "is_ack", "is_rst", "is_fin", "ttl", "tcp_window", "payload_len", "payload_ratio"]].values
 
 scaler = MinMaxScaler()
 scaled_data = scaler.fit_transform(data)
 data_tensor = torch.FloatTensor(scaled_data)
 
-cyber_ai = CyberAI(input_dim=10)
+cyber_ai = CyberAI()
 criterion = nn.MSELoss()
 optimizer = optim.Adam(cyber_ai.model.parameters(), lr=0.01)
 

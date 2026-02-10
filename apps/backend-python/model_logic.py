@@ -31,7 +31,7 @@ class Autoencoder(nn.Module):
          return x
 
 class CyberAI:
-    def __init__(self, input_dim = 10):
+    def __init__(self, input_dim = 11):
         self.model = Autoencoder(input_dim)
         self.scaler = None
         self.threshold  = 0.0

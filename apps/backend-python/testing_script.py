@@ -4,7 +4,7 @@ import torch
 from model_logic import CyberAI
 
 # 1. Load the Master AI
-brain = CyberAI(input_dim=10)
+brain = CyberAI()
 brain.load("models/model.pth", "models/scaler.pkl")
 print(f"AI Loaded. Threshold: {brain.threshold:.6f}")
 
@@ -14,21 +14,17 @@ input_file = "E:/NF-UQ-NIDS-v2.csv/NF-UQ-NIDS-v2.csv"
 selected_cols = [
     'L4_DST_PORT', 'LONGEST_FLOW_PKT', 'FLOW_DURATION_MILLISECONDS',
     'TCP_FLAGS', 'MIN_TTL', 'TCP_WIN_MAX_OUT',
-    'IN_BYTES', 'Label', 'Attack'  # Added 'Attack' to see the name
+    'IN_BYTES', 'Label', 'IN_PKTS', 'IN_BYTES', 'Attack'
 ]
 
 print("\nScanning 13GB file for real attacks to test...")
 
-# We will collect a few examples of different attacks
 attack_samples = []
 
-# Read in chunks to find attacks
 for chunk in pd.read_csv(input_file, usecols=selected_cols, chunksize=200000):
-    # Filter for Attacks (Label 1)
     attack_chunk = chunk[chunk['Label'] == 1].copy()
 
     if not attack_chunk.empty:
-        # Process them EXACTLY like training
         flags = attack_chunk['TCP_FLAGS'].astype(int)
         attack_chunk['is_syn'] = (flags & 2).astype(bool).astype(int)
         attack_chunk['is_ack'] = (flags & 16).astype(bool).astype(int)
@@ -42,8 +38,13 @@ for chunk in pd.read_csv(input_file, usecols=selected_cols, chunksize=200000):
         attack_chunk['tcp_window'] = np.log1p(attack_chunk['TCP_WIN_MAX_OUT'])
         attack_chunk['payload_len'] = np.log1p(attack_chunk['IN_BYTES'])
 
+        # payload_ratio
+        header_estimate = attack_chunk["IN_PKTS"] * 54
+        payload_estimate = (attack_chunk["IN_BYTES"] - header_estimate).clip(lower=0)
+        attack_chunk["payload_ratio"] = payload_estimate / attack_chunk["IN_BYTES"].clip(lower=1)
+
         final_cols = ['dest_port', 'packet_size', 'time_delta', 'is_syn', 'is_ack', 'is_rst', 'is_fin', 'ttl',
-                      'tcp_window', 'payload_len', 'Attack']
+                      'tcp_window', 'payload_len', 'payload_ratio', 'Attack']
 
         attack_samples.append(attack_chunk[final_cols])
 
@@ -51,18 +52,16 @@ for chunk in pd.read_csv(input_file, usecols=selected_cols, chunksize=200000):
         if sum(len(x) for x in attack_samples) >= 5000:
             break
 
-# Combine all found attacks
+
 df_attacks = pd.concat(attack_samples)
 
 print(f"{'Attack Type':<20} | {'Score':<10} | {'Status'}")
 print("-" * 50)
 
-# Test the first 20 found attacks
-for i in range(20):
+for i in range(200):
     row_data = df_attacks.iloc[i]
     attack_name = row_data['Attack']
 
-    # Remove 'Attack' label before feeding to AI
     features = row_data.drop('Attack').values.reshape(1, -1)
 
     score = brain.get_anomaly_score(features)

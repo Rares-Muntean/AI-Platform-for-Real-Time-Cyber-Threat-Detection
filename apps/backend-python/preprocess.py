@@ -7,7 +7,7 @@ output_file = "datasets/master_normal_traffic.csv"
 selected_cols = [
     'L4_DST_PORT', 'LONGEST_FLOW_PKT', 'FLOW_DURATION_MILLISECONDS',
     'TCP_FLAGS', 'MIN_TTL', 'TCP_WIN_MAX_OUT',
-    'IN_BYTES', 'Label'
+    'IN_BYTES', 'Label', 'IN_PKTS', 'IN_BYTES'
 ]
 
 normal_data_list = []
@@ -29,9 +29,13 @@ for chunk in pd.read_csv(input_file, usecols=selected_cols, chunksize=100000):
         benign_chunk['ttl'] = benign_chunk['MIN_TTL']
         benign_chunk['tcp_window'] = np.log1p(benign_chunk['TCP_WIN_MAX_OUT'])
         benign_chunk['payload_len'] = np.log1p(benign_chunk['IN_BYTES'])
+        # Calculating Payload Ratio
+        header_estimate = benign_chunk["IN_PKTS"] * 54
+        payload_estimate = (benign_chunk["IN_BYTES"] - header_estimate).clip(lower=0)
+        benign_chunk["payload_ratio"] = payload_estimate / benign_chunk["IN_BYTES"].clip(lower=1)
 
         final_cols = ['dest_port', 'packet_size', 'time_delta', 'is_syn', 'is_ack', 'is_rst', 'is_fin', 'ttl',
-                      'tcp_window', 'payload_len']
+                      'tcp_window', 'payload_len', 'payload_ratio']
 
         normal_data_list.append(benign_chunk[final_cols])
 
