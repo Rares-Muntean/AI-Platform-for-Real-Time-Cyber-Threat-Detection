@@ -7,12 +7,14 @@ import random
 from sklearn.preprocessing import MinMaxScaler
 from model_logic import CyberAI
 
-# seed = 42
-# torch.manual_seed(seed)
-# np.random.seed(seed)
-# random.seed(seed)
-# if torch.cuda.is_available():
-#     torch.cuda.manual_seed(seed)
+# SEED = random.randrange(21000)
+SEED = 2
+print(f"Training seed: {SEED}")
+
+random.seed(SEED)
+np.random.seed(SEED)
+torch.manual_seed(SEED)
+torch.cuda.manual_seed_all(SEED)
 
 df = pd.read_csv("datasets/master_normal_traffic.csv")
 data = df[["dest_port", "packet_size", "time_delta", "is_syn", "is_ack", "is_rst", "is_fin", "ttl", "tcp_window", "payload_len"]].values
@@ -27,7 +29,7 @@ optimizer = optim.Adam(cyber_ai.model.parameters(), lr=0.01)
 
 # TRAINING LOOP
 print("Training autoencoder model...")
-epochs = 200
+epochs = 300
 for epoch in range (epochs):
     output = cyber_ai.model(data_tensor)
     loss = criterion(output, data_tensor)

@@ -23,7 +23,7 @@ for chunk in pd.read_csv(input_file, usecols=selected_cols, chunksize=100000):
         benign_chunk['is_fin'] = (flags & 1).astype(bool).astype(int)
 
         # 2. Rename and Scale
-        benign_chunk['dest_port'] = benign_chunk['L4_DST_PORT']
+        benign_chunk['dest_port'] = np.log1p(benign_chunk['L4_DST_PORT'])
         benign_chunk['packet_size'] = np.log1p(benign_chunk['LONGEST_FLOW_PKT'])
         benign_chunk['time_delta'] = np.log1p(benign_chunk['FLOW_DURATION_MILLISECONDS'] / 1000.0)
         benign_chunk['ttl'] = benign_chunk['MIN_TTL']

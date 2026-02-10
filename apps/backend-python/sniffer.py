@@ -27,8 +27,10 @@ def monitor_traffic(packet):
             port = packet[UDP].dport
         else:
             port = 0
+        log_port =np.log1p(port)
 
         log_size = np.log1p(len(packet))
+
 
         now = time.time()
         packet_timestamps.append(now)
@@ -57,15 +59,9 @@ def monitor_traffic(packet):
             payload = np.log1p(len(packet[TCP].payload))
 
         # --- AI PREDICTION ---
-        features = np.array([[port, log_size, log_delta, is_syn, is_ack, is_rst, is_fin, ttl, window, payload]])
+        features = np.array([[log_port, log_size, log_delta, is_syn, is_ack, is_rst, is_fin, ttl, window, payload]])
         anomaly_score = guard.get_anomaly_score(features)
 
-        # # --- STABLE MULTIPLIER ---
-        # boost = 1.0
-        # if pps > 800:
-        #     boost = np.log10(pps)
-
-        # anomaly_score *= boost
         score_buffer.append(anomaly_score)
 
         # --- ALERT LOGIC ---
