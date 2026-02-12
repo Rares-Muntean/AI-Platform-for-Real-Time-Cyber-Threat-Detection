@@ -1,11 +1,26 @@
-var builder = WebApplication.CreateBuilder(args);
+using Microsoft.AspNetCore.Authorization;
 
-// Add services to the container.
+var builder = WebApplication.CreateBuilder(args);
+var AllowPythonService = "_allowPythonService";
+var AllowNuxtFrontend = "_allowNuxtFrontend";
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: AllowPythonService,
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:8080");
+        });
+
+    options.AddPolicy(name: AllowNuxtFrontend,
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:5000")
+        });
+});
 
 var app = builder.Build();
 
@@ -17,6 +32,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors(AllowPythonService);
 
 app.UseAuthorization();
 
