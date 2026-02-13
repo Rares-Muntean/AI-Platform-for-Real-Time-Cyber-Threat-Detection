@@ -10,7 +10,7 @@ from ai_model.training import train_model
 
 df = pd.read_csv("../datasets/master_normal_traffic.csv")
 data = df[["dest_port", "packet_size", "time_delta", "is_syn", "is_ack", "is_rst", "is_fin", "ttl", "tcp_window",
-           "payload_len", "payload_ratio", "bps", "pkts_diff", "avg_pkt_size"]].values
+           "payload_len", "payload_ratio", "bps", "pkts_count", "avg_pkt_size"]].values
 
 scaler = MinMaxScaler()
 scaled_data = scaler.fit_transform(data)
@@ -32,7 +32,7 @@ for i in range(1):
     criterion = nn.MSELoss()
     optimizer = optim.Adam(cyber_ai.model.parameters(), lr=0.01)
 
-    train_model(cyber_ai, data_tensor, criterion, optimizer, scaler,)
+    train_model(cyber_ai, data_tensor, criterion, optimizer, scaler, 250)
     print("\n\n\n")
 
 

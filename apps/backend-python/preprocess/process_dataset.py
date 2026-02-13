@@ -44,14 +44,14 @@ for i, chunk in enumerate(pd.read_csv(input_file, usecols=selected_cols, chunksi
         benign_chunk['bps'] = np.log1p(benign_chunk['IN_BYTES'] / duration_sec.clip(lower=0.001))
 
         # Incoming vs Outgoing packet difference
-        benign_chunk['pkts_diff'] = np.abs(benign_chunk['IN_PKTS'] - benign_chunk['OUT_PKTS'])
+        benign_chunk['pkts_count'] = benign_chunk['IN_PKTS']
 
         # Average Packet Size in the flow
         benign_chunk['avg_pkt_size'] = benign_chunk['IN_BYTES'] / benign_chunk['IN_PKTS'].clip(lower=1)
 
         # Processing Final Selected Columns
         final_cols = ['dest_port', 'packet_size', 'time_delta', 'is_syn', 'is_ack', 'is_rst', 'is_fin', 'ttl',
-                      'tcp_window', 'payload_len', 'payload_ratio', 'bps', 'pkts_diff', 'avg_pkt_size']
+                      'tcp_window', 'payload_len', 'payload_ratio', 'bps', 'pkts_count', 'avg_pkt_size']
         normal_data_list.append(benign_chunk[final_cols])
         total_extracted += len(benign_chunk)
         print(f"Processed Chunk {i + 1} | Extracted: {total_extracted} rows", end='\r')

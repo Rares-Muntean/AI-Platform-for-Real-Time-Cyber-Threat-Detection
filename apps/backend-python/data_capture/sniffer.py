@@ -23,8 +23,111 @@ score_buffer = deque(maxlen=BUFFER_SIZE)
 
 threat_manager = ThreatManager()
 
-# Key: IP Address | Value: {count, total_bytes, start_time}
-flow_memory = {}
+# Key: src_ip, dst_ip, src_port, dst_port, proto
+active_flows = {}
+FLOW_TIMEOUT = 30
+PACKET_LIMIT = 100
+
+def monitor_traffic(packet):
+    """
+    Monitors the traffic by checking flow of packets.
+    :param packet: incoming packet that will be read using 'sniff'
+    :return: packet details object that will be passed in to ASP.NET
+    """
+    if packet.haslayer(IP):
+        now = time.time()
+
+        src_ip = packet[IP].src
+        dst_ip = packet[IP].dst
+        proto = packet.proto
+        sport = packet[TCP].sport if packet.haslayer(TCP) else (packet[UDP].sport if packet.haslayer(UDP) else 0)
+        dport = packet[TCP].dport if packet.haslayer(TCP) else (packet[UDP].dport if packet.haslayer(UDP) else 0)
+
+        flow_key = (src_ip, dst_ip, sport, dport, proto)
+
+        if flow_key not in active_flows:
+            active_flows[flow_key] = {
+                'start_time': now,
+                'last_time': now,
+                'packet_count': 1,
+                'byte_count': len(packet),
+                'flags': str(packet[TCP].flags) if packet.haslayer(TCP) else "",
+                'ttl_sum': packet[IP].ttl,
+                'win_sum': packet[TCP].window if packet.haslayer(TCP) else 0,
+                'payload_sum': len(packet[TCP].payload) if packet.haslayer(TCP) else 0,
+                'max_pkt_size': len(packet),
+            }
+
+        else:
+            flow = active_flows[flow_key]
+            flow['packet_count'] += 1
+            flow['byte_count'] += len(packet)
+            flow['last_time'] = now
+            flow['ttl_sum'] += packet[IP].ttl
+            if packet.haslayer(TCP):
+                flow['flags'] += str(packet[TCP].flags)
+                flow['win_sum'] += packet[TCP].window
+                flow['payload_sum'] += len(packet[TCP].payload)
+            if len(packet) > active_flows[flow_key]['max_pkt_size']:
+                active_flows[flow_key]['max_pkt_size'] = len(packet)
+
+        if packet.haslayer(TCP):
+            tcp_flags = packet[TCP].flags
+            is_connection_done = 'F' in str(tcp_flags) or 'R' in str(tcp_flags)
+        else:
+            is_connection_done = False
+
+        if active_flows[flow_key]['packet_count'] >= PACKET_LIMIT or is_connection_done:
+            predict_flow_threat(flow_key)
+            del active_flows[flow_key]
+
+def predict_flow_threat(key):
+    flow = active_flows[key]
+    duration = max(flow['last_time'] - flow['start_time'], 0.0001)
+
+    # --- Getting features from the ended flow ---
+    #   (0: src_ip, 1: dst_ip, 2: source port, 3: dest port, 4: proto)
+    # Port
+    log_port = np.log1p(key[3])
+
+    # MAX Packet Size
+    log_size = np.log1p(flow['max_pkt_size'])
+
+    # Time Delta (Represents flow duration)
+    log_duration = np.log1p(duration)
+
+    # Flags
+    is_syn = 1 if 'S' in flow['flags'] else 0
+    is_ack = 1 if 'A' in flow['flags'] else 0
+    is_fin = 1 if 'F' in flow['flags'] else 0
+    is_rst = 1 if 'R' in flow['flags'] else 0
+
+    # Avg ttl and window
+    avg_ttl = flow['ttl_sum'] / flow['packet_count']
+    avg_window = flow['win_sum'] / flow['packet_count']
+    log_window = np.log1p(avg_window)
+
+    # Payload Ratio
+    avg_payload = flow['payload_sum'] / flow['packet_count']
+    log_payload = np.log1p(avg_payload)
+    payload_ratio = flow['payload_sum'] / flow['byte_count'] if flow['byte_count'] > 0 else 0
+
+    # Bytes Per Second
+    bps = np.log1p(flow['byte_count'] / duration)
+
+    # Packets Count
+    pkts_count = flow['packet_count']
+
+    # Avg packet size
+    avg_pkt_size = flow['byte_count'] / flow['packet_count']
+
+
+    features = np.array([[log_port, log_size, log_duration, is_syn, is_ack, is_rst, is_fin, avg_ttl, log_window,
+                          log_payload, payload_ratio, bps, pkts_count, avg_pkt_size]])
+
+    score = guard.get_anomaly_score(features)
+
+    print(score)
 
 def _alert_monitor():
     """
@@ -68,116 +171,7 @@ def _alert_monitor():
             print(f"{severity} [{threat_type}] Alert Sent!")
 
 
-def _get_features(packet):
-    """
-    Function where all the features are extracted from the sniffed packet, necessary in AI prediction.
-    :param packet: The packet passed in from the monitor_traffic function (sniff).
-    :return: The features array required for the AI model to predict score.
-    """
 
-    global last_packet_time
-    src_ip = packet[IP].src
-    dst_ip = packet[IP].dst
-
-    # Updating flow in memory
-    now = time.time()
-    if src_ip not in flow_memory:
-        flow_memory[src_ip] = {'count': 1, 'bytes': len(packet), 'start': now}
-    else:
-        flow_memory[src_ip]['count'] += 1
-        flow_memory[src_ip]['bytes'] += len(packet)
-
-    if flow_memory[src_ip]['count'] > 100:
-        flow_memory[src_ip] = {'count': 1, 'bytes': len(packet), 'start': now}
-
-    # Calculates the bytes per second and difference between incoming and outgoing packets
-    ip_stats = flow_memory[src_ip]
-    duration = max(now - ip_stats['start'], 0.001)
-    bps = np.log1p(ip_stats['bytes'] / duration)
-    avg_pkt_size = ip_stats['bytes'] / ip_stats['count']
-    pkts_diff = ip_stats['count']
-
-    # Port
-    if packet.haslayer(TCP):
-        port = packet[TCP].dport
-    elif packet.haslayer(UDP):
-        port = packet[UDP].dport
-    else:
-        port = 0
-    log_port = np.log1p(port)
-
-    # Packet size
-    log_size = np.log1p(len(packet))
-
-    # Payload Ratio
-    total_size = len(packet)
-    if packet.haslayer(TCP):
-        payload_size = len(packet[TCP].payload)
-    elif packet.haslayer(UDP):
-        payload_size = len(packet[UDP].payload)
-    else:
-        payload_size = 0
-    payload_ratio = payload_size / total_size if total_size > 0 else 0
-
-    # Delta time between consecutive packets
-    now = time.time()
-    packet_timestamps.append(now)
-    raw_delta = now - last_packet_time
-    last_packet_time = now
-    delta_clipped = min(raw_delta, 5.0)
-    log_delta = np.log1p(delta_clipped)
-
-    # Time to live
-    ttl = packet[IP].ttl
-
-    # TCP Flags
-    is_syn = is_ack = is_rst = is_fin = window = payload = 0
-    if packet.haslayer(TCP):
-        flags = str(packet[TCP].flags)
-        is_syn = 1 if "S" in flags else 0
-        is_ack = 1 if "A" in flags else 0
-        is_rst = 1 if "R" in flags else 0
-        is_fin = 1 if "F" in flags else 0
-
-        window = np.log1p(packet[TCP].window)
-        payload = np.log1p(len(packet[TCP].payload))
-
-    # Features to array
-    features = np.array([[log_port, log_size, log_delta, is_syn, is_ack, is_rst, is_fin, ttl, window, payload,
-                          payload_ratio, bps, pkts_diff, avg_pkt_size]])
-
-    print("bps live:", np.mean(features[:, 11]), np.std(features[:, 11]))
-    print("avg_pkt_size live:", np.mean(features[:, 13]), np.std(features[:, 13]))
-    print("time_delta live:", np.mean(features[:, 2]), np.std(features[:, 2]))
-
-    packet_info = {
-        'src': src_ip,
-        'dst': dst_ip,
-        'src_mac': packet.src if packet.haslayer('Ether') else 'Unknown',
-        'proto': 'TCP' if packet.haslayer(TCP) else ('UDP' if packet.haslayer(UDP) else 'Other'),
-        'port': port
-    }
-
-    return features, packet_info
-
-
-def monitor_traffic(packet):
-    """
-    Monitors the traffic by checking each packet's data.
-    :param packet: incoming packet that will be read using 'sniff'
-    :return: packet details object that will be passed in to ASP.NET
-    """
-
-    if packet.haslayer(IP):
-        features, packet_info = _get_features(packet)
-        anomaly_score = guard.get_anomaly_score(features)
-
-        score_buffer.append({'score': anomaly_score, "info": packet_info})
-
-        if len(flow_memory) > 1000: flow_memory.clear()
-
-        # ALERT
-        _alert_monitor()
 
 
 print("Monitoring started. System is learning to ignore background noise...")
