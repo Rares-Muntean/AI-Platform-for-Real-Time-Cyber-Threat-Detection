@@ -1,5 +1,8 @@
 import sys
 import os
+
+import joblib
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from data_capture.threat_manager import ThreatManager
@@ -14,6 +17,10 @@ import time
 guard = CyberAI(input_dim=12) # Ensure we specify 12 features
 guard.load()
 print(f"AI Guard Active. Alert threshold is: {guard.threshold:.6f}")
+
+clf_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'models', 'classifier.pkl'))
+classifier = joblib.load(clf_path)
+print(f"Stage 2: Threat Classifier Active.")
 
 # Global Variables
 BUFFER_SIZE = 50
@@ -131,8 +138,15 @@ def predict_flow_threat(key):
     score = guard.get_anomaly_score(features)
 
     # Print logic for real-time monitoring
-    status = "🔴 ANOMALY" if score > guard.threshold else "🟢 NORMAL"
-    print(f"{status} | Score: {score:.6f} | Port: {flow['dport']} | Pkts: {total_pkts}")
+    if score > guard.threshold:
+        prediction = classifier.predict(features)[0]
+
+        if prediction == "Benign":
+            print(f"🟢 NORMAL (Verified) | Score: {score:.4f} | Port: {flow['dport']}")
+        else:
+            print(f"🚨 THREAT: {prediction.upper()}! | Score: {score:.4f} | Port: {flow['dport']} | Pkts: {total_pkts}")
+    else:
+        print(f"🟢 NORMAL | Score: {score:.4f} | Port: {flow['dport']}")
 
     # (You can pass this to score_buffer and _alert_monitor later)
 
