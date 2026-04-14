@@ -11,29 +11,20 @@ from scapy.all import sniff
 import time
 
 # Setup AI
-guard = CyberAI()
+guard = CyberAI(input_dim=12) # Ensure we specify 12 features
 guard.load()
-print(f"AI Guard Active. Alert threshold is: {guard.threshold}")
+print(f"AI Guard Active. Alert threshold is: {guard.threshold:.6f}")
 
 # Global Variables
 BUFFER_SIZE = 50
-last_packet_time = time.time()
-packet_timestamps = deque(maxlen=1000)
 score_buffer = deque(maxlen=BUFFER_SIZE)
-
 threat_manager = ThreatManager()
 
-# Key: src_ip, dst_ip, src_port, dst_port, proto
 active_flows = {}
 FLOW_TIMEOUT = 30
-PACKET_LIMIT = 100
+PACKET_LIMIT = 50 # Lowered slightly for faster real-time detection
 
 def monitor_traffic(packet):
-    """
-    Monitors the traffic by checking flow of packets.
-    :param packet: incoming packet that will be read using 'sniff'
-    :return: packet details object that will be passed in to ASP.NET
-    """
     if packet.haslayer(IP):
         now = time.time()
 
@@ -43,136 +34,107 @@ def monitor_traffic(packet):
         sport = packet[TCP].sport if packet.haslayer(TCP) else (packet[UDP].sport if packet.haslayer(UDP) else 0)
         dport = packet[TCP].dport if packet.haslayer(TCP) else (packet[UDP].dport if packet.haslayer(UDP) else 0)
 
-        flow_key = (src_ip, dst_ip, sport, dport, proto)
+        # Create direction-aware keys
+        forward_key = (src_ip, dst_ip, sport, dport, proto)
+        backward_key = (dst_ip, src_ip, dport, sport, proto)
 
-        if flow_key not in active_flows:
+        if forward_key in active_flows:
+            flow_key = forward_key
+            is_forward = True
+        elif backward_key in active_flows:
+            flow_key = backward_key
+            is_forward = False
+        else:
+            flow_key = forward_key
+            is_forward = True
             active_flows[flow_key] = {
                 'start_time': now,
                 'last_time': now,
-                'packet_count': 1,
-                'byte_count': len(packet),
-                'flags': str(packet[TCP].flags) if packet.haslayer(TCP) else "",
-                'ttl_sum': packet[IP].ttl,
-                'win_sum': packet[TCP].window if packet.haslayer(TCP) else 0,
-                'payload_sum': len(packet[TCP].payload) if packet.haslayer(TCP) else 0,
-                'max_pkt_size': len(packet),
+                'fwd_pkts': 0, 'bwd_pkts': 0,
+                'fwd_bytes': 0, 'bwd_bytes': 0,
+                'flags': "",
+                'dport': dport,
+                'proto': proto
             }
 
+        flow = active_flows[flow_key]
+        pkt_len = len(packet)
+
+        # Update flow metrics based on direction
+        if is_forward:
+            flow['fwd_pkts'] += 1
+            flow['fwd_bytes'] += pkt_len
         else:
-            flow = active_flows[flow_key]
-            flow['packet_count'] += 1
-            flow['byte_count'] += len(packet)
-            flow['last_time'] = now
-            flow['ttl_sum'] += packet[IP].ttl
-            if packet.haslayer(TCP):
-                flow['flags'] += str(packet[TCP].flags)
-                flow['win_sum'] += packet[TCP].window
-                flow['payload_sum'] += len(packet[TCP].payload)
-            if len(packet) > active_flows[flow_key]['max_pkt_size']:
-                active_flows[flow_key]['max_pkt_size'] = len(packet)
+            flow['bwd_pkts'] += 1
+            flow['bwd_bytes'] += pkt_len
+
+        flow['last_time'] = now
 
         if packet.haslayer(TCP):
-            tcp_flags = packet[TCP].flags
-            is_connection_done = 'F' in str(tcp_flags) or 'R' in str(tcp_flags)
+            flow['flags'] += str(packet[TCP].flags)
+            is_connection_done = 'F' in str(packet[TCP].flags) or 'R' in str(packet[TCP].flags)
         else:
             is_connection_done = False
 
-        if active_flows[flow_key]['packet_count'] >= PACKET_LIMIT or is_connection_done:
+        total_pkts = flow['fwd_pkts'] + flow['bwd_pkts']
+
+        # End flow if it hits limits or connection closes
+        if total_pkts >= PACKET_LIMIT or is_connection_done:
             predict_flow_threat(flow_key)
             del active_flows[flow_key]
 
 def predict_flow_threat(key):
     flow = active_flows[key]
+
+    # Calculate CIC-IDS-2018 style metrics
+    fwd_pkts = max(1, flow['fwd_pkts'])
+    bwd_pkts = max(1, flow['bwd_pkts'])
+    total_pkts = fwd_pkts + bwd_pkts
+
+    # Duration in seconds
     duration = max(flow['last_time'] - flow['start_time'], 0.0001)
 
-    # --- Getting features from the ended flow ---
-    #   (0: src_ip, 1: dst_ip, 2: source port, 3: dest port, 4: proto)
-    # Port
-    log_port = np.log1p(key[3])
+    # 1. Dst Port (Log scaled)
+    dest_port = np.log1p(flow['dport'])
 
-    # MAX Packet Size
-    log_size = np.log1p(flow['max_pkt_size'])
+    # 2. Protocol
+    protocol = flow['proto']
 
-    # Time Delta (Represents flow duration)
-    log_duration = np.log1p(duration)
+    # 3. Fwd Pkt Len Mean
+    fwd_pkt_len_mean = np.log1p(flow['fwd_bytes'] / fwd_pkts)
 
-    # Flags
-    is_syn = 1 if 'S' in flow['flags'] else 0
-    is_ack = 1 if 'A' in flow['flags'] else 0
-    is_fin = 1 if 'F' in flow['flags'] else 0
-    is_rst = 1 if 'R' in flow['flags'] else 0
+    # 4. Bwd Pkt Len Mean
+    bwd_pkt_len_mean = np.log1p(flow['bwd_bytes'] / bwd_pkts)
 
-    # Avg ttl and window
-    avg_ttl = flow['ttl_sum'] / flow['packet_count']
-    avg_window = flow['win_sum'] / flow['packet_count']
-    log_window = np.log1p(avg_window)
+    # 5. Pkt Len Mean
+    pkt_len_mean = np.log1p((flow['fwd_bytes'] + flow['bwd_bytes']) / total_pkts)
 
-    # Payload Ratio
-    avg_payload = flow['payload_sum'] / flow['packet_count']
-    log_payload = np.log1p(avg_payload)
-    payload_ratio = flow['payload_sum'] / flow['byte_count'] if flow['byte_count'] > 0 else 0
+    # 6. Flow IAT Mean (Time between packets in Microseconds to match CIC-IDS)
+    iat_mean_seconds = duration / max(1, (total_pkts - 1))
+    flow_iat_mean = np.log1p(iat_mean_seconds * 1_000_000)
 
-    # Bytes Per Second
-    bps = np.log1p(flow['byte_count'] / duration)
+    # 7. Down/Up Ratio
+    down_up_ratio = flow['bwd_bytes'] / max(1, flow['fwd_bytes'])
 
-    # Packets Count
-    pkts_count = flow['packet_count']
+    # 8-12. Flags (0 or 1)
+    fin_flag = 1 if 'F' in flow['flags'] else 0
+    syn_flag = 1 if 'S' in flow['flags'] else 0
+    rst_flag = 1 if 'R' in flow['flags'] else 0
+    psh_flag = 1 if 'P' in flow['flags'] else 0
+    ack_flag = 1 if 'A' in flow['flags'] else 0
 
-    # Avg packet size
-    avg_pkt_size = flow['byte_count'] / flow['packet_count']
+    features = np.array([[dest_port, protocol, fwd_pkt_len_mean, bwd_pkt_len_mean,
+                          pkt_len_mean, flow_iat_mean, down_up_ratio,
+                          fin_flag, syn_flag, rst_flag, psh_flag, ack_flag]])
 
-
-    features = np.array([[log_port, log_size, log_duration, is_syn, is_ack, is_rst, is_fin, avg_ttl, log_window,
-                          log_payload, payload_ratio, bps, pkts_count, avg_pkt_size]])
-
+    # Get Anomaly Score
     score = guard.get_anomaly_score(features)
 
-    print(score)
+    # Print logic for real-time monitoring
+    status = "🔴 ANOMALY" if score > guard.threshold else "🟢 NORMAL"
+    print(f"{status} | Score: {score:.6f} | Port: {flow['dport']} | Pkts: {total_pkts}")
 
-def _alert_monitor():
-    """
-    Alerts the backend when the AI model detected an anomaly during sniffing. Checks in batches of x packets the ones
-    that have anomaly score above a certain threshold. Those certain packets will be passed in to the 'threat_manager'
-    class to identify if the attacks are distributed / single threats.
-    :return:
-    """
-    if len(score_buffer) == BUFFER_SIZE:
-        scores_array = np.array([item['score'] for item in score_buffer])
-        avg_score = np.mean(scores_array)
-        std_dev = np.std(scores_array)
+    # (You can pass this to score_buffer and _alert_monitor later)
 
-        # Debug only (not for production, delete later)
-        if avg_score < 0.10:
-            if np.random.random() < 0.02:
-                print(f"SAFE | {avg_score:.4f}")
-            return
-
-        # Checks each individual packet for the most suspicious scores.
-        suspicious_entries = [item for item in score_buffer if item['score'] > 0.08]
-        unique_ips_in_batch = set(item['info']['src'] for item in suspicious_entries)
-
-        peak_packet = max(score_buffer, key=lambda x: x['score'])
-
-        threat_type = "SINGLE_SOURCE"
-        attackers_count = 1
-
-        for ip in unique_ips_in_batch:
-            t_type, t_port, t_count = threat_manager.process_finding(ip, peak_packet['info']['port'], avg_score)
-            if t_type == "DISTRIBUTED_ATTACK":
-                threat_type = "DISTRIBUTED_ATTACK"
-                attackers_count = t_count
-
-        severity = "CRITICAL" if (avg_score > 0.12 and std_dev < 0.005) or threat_type == "DISTRIBUTED ATTACK" else "WARNING"
-
-        if threat_manager.is_allowed_to_send(peak_packet['info']['src'], threat_type):
-            # Fill later with data that will be sent to backend aspnet
-            payload = {}
-            # TO BE IMPLEMENTED:  _send_to_backend()
-            print(f"{severity} [{threat_type}] Alert Sent!")
-
-
-
-
-
-print("Monitoring started. System is learning to ignore background noise...")
+print("Monitoring started. Generating live network shape metrics...")
 sniff(prn=monitor_traffic, store=0)

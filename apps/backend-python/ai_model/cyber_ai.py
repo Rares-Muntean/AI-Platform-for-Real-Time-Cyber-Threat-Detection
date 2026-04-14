@@ -38,7 +38,7 @@ class CyberAI:
     SCALER_PATH = os.path.join(MODEL_DIR, 'scaler.pkl')
     THRESHOLD_PATH = os.path.join(MODEL_DIR, 'threshold.txt')
 
-    def __init__(self, input_dim = 14):
+    def __init__(self, input_dim = 12):
         self.model = Autoencoder(input_dim)
         self.scaler = None
         self.threshold  = 0.0

@@ -1,64 +1,72 @@
 import numpy as np
 import pandas as pd
+import os
 
-input_file = "E:/NF-UQ-NIDS-v2.csv/NF-UQ-NIDS-v2.csv"
+input_files =[
+    "E:/A.Projects/PROJECTS-LICENTA/02-22-2018.csv",
+    "E:/A.Projects/PROJECTS-LICENTA/02-23-2018.csv",
+    "E:/A.Projects/PROJECTS-LICENTA/02-20-2018.csv",
+]
 output_file = "../datasets/master_normal_traffic.csv"
 
-selected_cols = [
-    'L4_DST_PORT', 'LONGEST_FLOW_PKT', 'FLOW_DURATION_MILLISECONDS',
-    'TCP_FLAGS', 'MIN_TTL', 'TCP_WIN_MAX_OUT', 'Label', 'IN_PKTS', 'OUT_PKTS', 'IN_BYTES', 'OUT_BYTES'
+target_columns =[
+    'Dst Port', 'Protocol', 'Fwd Pkt Len Mean', 'Bwd Pkt Len Mean',
+    'Pkt Len Mean', 'Flow IAT Mean', 'Down/Up Ratio',
+    'FIN Flag Cnt', 'SYN Flag Cnt', 'RST Flag Cnt', 'PSH Flag Cnt', 'ACK Flag Cnt',
+    'Label'
 ]
 
-target_per_chunk = 10000
-normal_data_list = []
+normal_data_list =[]
 total_extracted = 0
 
-for i, chunk in enumerate(pd.read_csv(input_file, usecols=selected_cols, chunksize=750000)):
-    benign_pool = chunk[chunk['Label'] == 0].copy()
+TARGET_TOTAL = 3000000
 
-    if not benign_pool.empty:
-        sample_n = min(len(benign_pool), target_per_chunk)
-        benign_chunk = benign_pool.sample(n=sample_n, random_state=42)
-
-        # EXTRACT IMPORTANT FEATURES
-        flags = benign_chunk['TCP_FLAGS'].astype(int)
-        benign_chunk['is_syn'] = (flags & 2).astype(bool).astype(int)
-        benign_chunk['is_ack'] = (flags & 16).astype(bool).astype(int)
-        benign_chunk['is_rst'] = (flags & 4).astype(bool).astype(int)
-        benign_chunk['is_fin'] = (flags & 1).astype(bool).astype(int)
-
-        benign_chunk['dest_port'] = np.log1p(benign_chunk['L4_DST_PORT'])
-        benign_chunk['packet_size'] = np.log1p(benign_chunk['LONGEST_FLOW_PKT'])
-        benign_chunk['time_delta'] = np.log1p(benign_chunk['FLOW_DURATION_MILLISECONDS'] / 1000.0)
-        benign_chunk['ttl'] = benign_chunk['MIN_TTL']
-        benign_chunk['tcp_window'] = np.log1p(benign_chunk['TCP_WIN_MAX_OUT'])
-        benign_chunk['payload_len'] = np.log1p(benign_chunk['IN_BYTES'])
-
-        # Payload Ratio
-        header_estimate = benign_chunk["IN_PKTS"] * 54
-        payload_estimate = (benign_chunk["IN_BYTES"] - header_estimate).clip(lower=0)
-        benign_chunk['payload_ratio'] = payload_estimate / benign_chunk["IN_BYTES"].clip(lower=1)
-
-        # Bytes Per Second (Throughput)
-        duration_sec = benign_chunk['FLOW_DURATION_MILLISECONDS'] / 1000
-        benign_chunk['bps'] = np.log1p(benign_chunk['IN_BYTES'] / duration_sec.clip(lower=0.001))
-
-        # Incoming vs Outgoing packet difference
-        benign_chunk['pkts_count'] = benign_chunk['IN_PKTS']
-
-        # Average Packet Size in the flow
-        benign_chunk['avg_pkt_size'] = benign_chunk['IN_BYTES'] / benign_chunk['IN_PKTS'].clip(lower=1)
-
-        # Processing Final Selected Columns
-        final_cols = ['dest_port', 'packet_size', 'time_delta', 'is_syn', 'is_ack', 'is_rst', 'is_fin', 'ttl',
-                      'tcp_window', 'payload_len', 'payload_ratio', 'bps', 'pkts_count', 'avg_pkt_size']
-        normal_data_list.append(benign_chunk[final_cols])
-        total_extracted += len(benign_chunk)
-        print(f"Processed Chunk {i + 1} | Extracted: {total_extracted} rows", end='\r')
-
-    if total_extracted >= 1000000:
+for file_path in input_files:
+    if total_extracted >= TARGET_TOTAL:
         break
 
-master_df = pd.concat(normal_data_list)[:1000000]
+    print(f"\nOpening {os.path.basename(file_path)}...")
+
+    for i, chunk in enumerate(pd.read_csv(file_path, chunksize=750000, low_memory=False)):
+
+        chunk.columns = chunk.columns.str.strip()
+
+        try:
+            chunk = chunk[target_columns]
+        except KeyError as e:
+            print(f"Column mismatch in chunk. Skipping. Error: {e}")
+            continue
+
+        benign_pool = chunk[chunk['Label'] == 'Benign'].copy()
+
+        if not benign_pool.empty:
+            benign_pool.replace([np.inf, -np.inf], np.nan, inplace=True)
+            benign_pool.dropna(inplace=True)
+
+            benign_chunk = benign_pool
+
+            processed_chunk = pd.DataFrame()
+            processed_chunk['dest_port'] = np.log1p(benign_chunk['Dst Port'])
+            processed_chunk['protocol'] = benign_chunk['Protocol']
+            processed_chunk['fwd_pkt_len_mean'] = np.log1p(benign_chunk['Fwd Pkt Len Mean'])
+            processed_chunk['bwd_pkt_len_mean'] = np.log1p(benign_chunk['Bwd Pkt Len Mean'])
+            processed_chunk['pkt_len_mean'] = np.log1p(benign_chunk['Pkt Len Mean'])
+            processed_chunk['flow_iat_mean'] = np.log1p(benign_chunk['Flow IAT Mean'])
+            processed_chunk['down_up_ratio'] = benign_chunk['Down/Up Ratio']
+
+            processed_chunk['fin_flag'] = benign_chunk['FIN Flag Cnt'].clip(upper=1)
+            processed_chunk['syn_flag'] = benign_chunk['SYN Flag Cnt'].clip(upper=1)
+            processed_chunk['rst_flag'] = benign_chunk['RST Flag Cnt'].clip(upper=1)
+            processed_chunk['psh_flag'] = benign_chunk['PSH Flag Cnt'].clip(upper=1)
+            processed_chunk['ack_flag'] = benign_chunk['ACK Flag Cnt'].clip(upper=1)
+
+            normal_data_list.append(processed_chunk)
+            total_extracted += len(processed_chunk)
+            print(f"Processed Chunk {i + 1} | Extracted: {total_extracted}/{TARGET_TOTAL} rows", end='\r')
+
+        if total_extracted >= TARGET_TOTAL:
+            break
+
+master_df = pd.concat(normal_data_list)[:TARGET_TOTAL]
 master_df.to_csv(output_file, index=False)
-print("Master Normal Dataset Created!")
+print(f"\nMaster Normal Dataset Created with {len(master_df)} rows and {len(master_df.columns)} features!")
