@@ -10,7 +10,7 @@ df = pd.read_csv("../datasets/classifier_data.csv")
 df.dropna(inplace=True)
 
 features =[
-    'dest_port', 'protocol', 'fwd_pkt_len_mean', 'bwd_pkt_len_mean',
+    'protocol', 'fwd_pkt_len_mean', 'bwd_pkt_len_mean',
     'pkt_len_mean', 'flow_iat_mean', 'down_up_ratio',
     'fin_flag', 'syn_flag', 'rst_flag', 'psh_flag', 'ack_flag'
 ]
