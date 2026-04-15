@@ -105,12 +105,12 @@ def predict_flow_threat(key):
                              pkt_len_mean, flow_iat_mean, down_up_ratio,
                              fin_flag, syn_flag, rst_flag, psh_flag, ack_flag]])
 
-    # STAGE 1
-    score = guard.get_anomaly_score(ae_features)
+    score, error_vector  = guard.get_anomaly_score(ae_features)
 
-    # STAGE 2
     if score > guard.threshold:
         print(f"ANOMALY | Score: {score:.4f} | Port: {flow['dport']} | Pkts: {total_pkts}")
+        formatted_signature = [round(e, 4) for e in error_vector]
+        print(f"   -> Error Signature: {formatted_signature}")
     else:
         print(f"Normal | Score: {score:.4f} | Port: {flow['dport']} | Pkts: {total_pkts}")
 

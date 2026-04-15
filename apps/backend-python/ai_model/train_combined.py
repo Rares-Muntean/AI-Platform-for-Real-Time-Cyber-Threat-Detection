@@ -22,21 +22,16 @@ def set_seeds(seed):
 
 set_seeds(SEED)
 
-print("1️⃣ Loading datasets...")
 df_cic = pd.read_csv("../datasets/master_normal_traffic.csv")
 df_cic.dropna(inplace=True)
-print(f"   -> CIC-IDS Base: {len(df_cic)} rows")
 
 df_local = pd.read_csv("../datasets/local_calibration.csv")
 df_local.dropna(inplace=True)
-print(f"   -> Local Linux Capture: {len(df_local)} rows")
 
-print("2️⃣ Merging and Oversampling...")
 local_multiplied = pd.concat([df_local] * 500, ignore_index=True)
 
 df_combined = pd.concat([df_cic, local_multiplied], ignore_index=True)
 df_combined = df_combined.sample(frac=1, random_state=SEED).reset_index(drop=True)
-print(f"   -> Total Training Rows: {len(df_combined)}")
 
 features = [
     'dest_port', 'protocol', 'fwd_pkt_len_mean', 'bwd_pkt_len_mean',
@@ -57,7 +52,7 @@ data_tensor = torch.FloatTensor(scaled_data)
 # --- TRAINING SETUP ---
 cyber_ai = CyberAI(input_dim=12)
 criterion = nn.MSELoss()
-optimizer = optim.Adam(cyber_ai.model.parameters(), lr=0.001)
+optimizer = optim.Adam(cyber_ai.model.parameters(), lr=0.0001)
 
 dataset = TensorDataset(data_tensor, data_tensor)
 loader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
@@ -88,5 +83,5 @@ with torch.no_grad():
 
 cyber_ai.scaler = scaler
 cyber_ai.save()
-print(f"\n✅ AI Successfully Trained!")
-print(f"🔒 Server Alert Threshold Locked At: {cyber_ai.threshold:.6f}")
+print(f"\nAI Successfully Trained!")
+print(f"Server Alert Threshold Locked At: {cyber_ai.threshold:.6f}")

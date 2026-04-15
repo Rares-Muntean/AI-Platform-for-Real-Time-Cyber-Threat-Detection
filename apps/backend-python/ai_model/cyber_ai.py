@@ -3,7 +3,6 @@ import torch.nn as nn
 import joblib
 import os
 
-
 class Autoencoder(nn.Module):
      def __init__(self, input_dim):
          super(Autoencoder, self).__init__()
@@ -62,9 +61,12 @@ class CyberAI:
 
         with torch.no_grad():
             output = self.model(input_tensor)
-            loss = torch.mean((input_tensor - output)**2)
 
-        return loss.item()
+            error_vector = (input_tensor - output) ** 2
+
+            mean_loss = torch.mean(error_vector).item()
+
+        return mean_loss, error_vector.numpy()[0]
 
 
 
