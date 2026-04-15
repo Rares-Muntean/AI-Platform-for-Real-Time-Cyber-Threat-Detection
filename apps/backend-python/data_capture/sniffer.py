@@ -1,21 +1,21 @@
 import sys
 import os
 
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from collections import deque
 import numpy as np
 from scapy.layers.inet import IP, TCP, UDP
 from ai_model.cyber_ai import CyberAI
+from ai_model.cluster_ai import SignatureClusterAI
 from scapy.all import sniff
 import time
-import joblib
 
 guard = CyberAI(input_dim=12)
 guard.load()
 
-clf_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'models', 'classifier.pkl'))
-classifier = joblib.load(clf_path)
+cluster_ai = SignatureClusterAI()
+cluster_ai.load()
 
 active_flows = {}
 PACKET_LIMIT = 100
@@ -108,9 +108,8 @@ def predict_flow_threat(key):
     score, error_vector  = guard.get_anomaly_score(ae_features)
 
     if score > guard.threshold:
-        print(f"ANOMALY | Score: {score:.4f} | Port: {flow['dport']} | Pkts: {total_pkts}")
-        formatted_signature = [round(e, 4) for e in error_vector]
-        print(f"   -> Error Signature: {formatted_signature}")
+        cluster_name = cluster_ai.categorize_threat(error_vector)
+        print(f"ANOMALY | Score: {score:.4f} | Port: {flow['dport']} | Profile: {cluster_name}")
     else:
         print(f"Normal | Score: {score:.4f} | Port: {flow['dport']} | Pkts: {total_pkts}")
 
