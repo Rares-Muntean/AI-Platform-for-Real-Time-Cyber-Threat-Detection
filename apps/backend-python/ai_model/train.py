@@ -10,7 +10,6 @@ from ai_model.training import train_model
 
 df = pd.read_csv("../datasets/master_normal_traffic.csv")
 
-# Clean any rogue NaNs that Pandas might have accidentally read
 df.dropna(inplace=True)
 
 features = [
@@ -37,9 +36,7 @@ for i in range(1):
     cyber_ai = CyberAI()
     criterion = nn.MSELoss()
 
-    # REDUCED LEARNING RATE TO 0.001 TO PREVENT NaN EXPLOSIONS
     optimizer = optim.Adam(cyber_ai.model.parameters(), lr=0.001)
 
-    # REDUCED EPOCHS TO 20 AND PASSED BATCH SIZE
     train_model(cyber_ai, data_tensor, criterion, optimizer, scaler, epochs=20, batch_size=4096)
     print("\n\n\n")

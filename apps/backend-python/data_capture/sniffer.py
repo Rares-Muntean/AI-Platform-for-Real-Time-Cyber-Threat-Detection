@@ -11,18 +11,14 @@ from scapy.all import sniff
 import time
 import joblib
 
-# Setup AI (Stage 1: The Watchdog)
 guard = CyberAI(input_dim=12)
 guard.load()
-print(f"🛡️ Stage 1: Autoencoder Active. Alert threshold: {guard.threshold:.6f}")
 
-# Setup Classifier (Stage 2: The Investigator)
 clf_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'models', 'classifier.pkl'))
 classifier = joblib.load(clf_path)
-print(f"🕵️ Stage 2: Behavioral Classifier Active.")
 
 active_flows = {}
-PACKET_LIMIT = 100  # Give human typing more time to look human
+PACKET_LIMIT = 100
 
 
 def monitor_traffic(packet):
@@ -35,9 +31,6 @@ def monitor_traffic(packet):
         sport = packet[TCP].sport if packet.haslayer(TCP) else (packet[UDP].sport if packet.haslayer(UDP) else 0)
         dport = packet[TCP].dport if packet.haslayer(TCP) else (packet[UDP].dport if packet.haslayer(UDP) else 0)
 
-        # --- STRICT DIRECTIONALITY FIX ---
-        # Forces the well-known port to ALWAYS be the destination.
-        # This prevents Fwd/Bwd features from randomly flipping!
         if sport < 1024 and dport >= 1024:
             forward_key = (dst_ip, src_ip, dport, sport, proto)
             backward_key = (src_ip, dst_ip, sport, dport, proto)
@@ -80,7 +73,6 @@ def monitor_traffic(packet):
 
         total_pkts = flow['fwd_pkts'] + flow['bwd_pkts']
 
-        # End flow if it hits limits
         if total_pkts >= PACKET_LIMIT or is_connection_done:
             predict_flow_threat(flow_key)
             del active_flows[flow_key]
@@ -109,13 +101,7 @@ def predict_flow_threat(key):
     psh_flag = 1 if 'P' in flow['flags'] else 0
     ack_flag = 1 if 'A' in flow['flags'] else 0
 
-    # 1. Autoencoder Features (12 features - includes port)
     ae_features = np.array([[dest_port, protocol, fwd_pkt_len_mean, bwd_pkt_len_mean,
-                             pkt_len_mean, flow_iat_mean, down_up_ratio,
-                             fin_flag, syn_flag, rst_flag, psh_flag, ack_flag]])
-
-    # 2. Classifier Features (11 features - NO PORT ALLOWED)
-    rf_features = np.array([[protocol, fwd_pkt_len_mean, bwd_pkt_len_mean,
                              pkt_len_mean, flow_iat_mean, down_up_ratio,
                              fin_flag, syn_flag, rst_flag, psh_flag, ack_flag]])
 
@@ -124,15 +110,9 @@ def predict_flow_threat(key):
 
     # STAGE 2
     if score > guard.threshold:
-        prediction = classifier.predict(rf_features)[0]
-
-        if prediction == "Benign":
-            # AI saw a weird port/shape, but verified it's just human activity
-            print(f"🟢 NORMAL (Verified) | Score: {score:.4f} | Port: {flow['dport']} | Pkts: {total_pkts}")
-        else:
-            print(f"🚨 THREAT: {prediction.upper()}! | Score: {score:.4f} | Port: {flow['dport']} | Pkts: {total_pkts}")
+        print(f"ANOMALY | Score: {score:.4f} | Port: {flow['dport']} | Pkts: {total_pkts}")
     else:
-        print(f"🟢 NORMAL | Score: {score:.4f} | Port: {flow['dport']} | Pkts: {total_pkts}")
+        print(f"Normal | Score: {score:.4f} | Port: {flow['dport']} | Pkts: {total_pkts}")
 
 
 print("Monitoring started. Awaiting traffic...")
