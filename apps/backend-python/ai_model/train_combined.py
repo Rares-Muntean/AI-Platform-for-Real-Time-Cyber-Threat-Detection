@@ -79,7 +79,7 @@ with torch.no_grad():
     reconstructed = cyber_ai.model(local_tensor)
     errors = torch.mean((local_tensor - reconstructed) ** 2, dim=1).numpy()
 
-    cyber_ai.threshold = np.percentile(errors, 99)
+    cyber_ai.threshold = np.percentile(errors, 99.9)
 
 cyber_ai.scaler = scaler
 cyber_ai.save()

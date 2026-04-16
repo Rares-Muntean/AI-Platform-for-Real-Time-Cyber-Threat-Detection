@@ -107,7 +107,9 @@ def predict_flow_threat(key):
 
     score, error_vector  = guard.get_anomaly_score(ae_features)
 
-    if score > guard.threshold:
+    dynamic_threshold = guard.threshold * 1.10
+
+    if score > dynamic_threshold:
         print(f"ANOMALY | Score: {score:.4f} | Port: {flow['dport']} | Pkts: {total_pkts}")
         formatted_signature = [round(e, 4) for e in error_vector]
         print(f"   -> Error Signature: {formatted_signature}")
