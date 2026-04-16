@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import random
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import RobustScaler
 from torch.utils.data import DataLoader, TensorDataset
 
 from ai_model.cyber_ai import CyberAI
@@ -45,7 +45,7 @@ df_combined.dropna(inplace=True)
 
 data = df_combined[features].values
 
-scaler = MinMaxScaler()
+scaler = RobustScaler()
 scaled_data = scaler.fit_transform(data)
 data_tensor = torch.FloatTensor(scaled_data)
 
@@ -79,7 +79,7 @@ with torch.no_grad():
     reconstructed = cyber_ai.model(local_tensor)
     errors = torch.mean((local_tensor - reconstructed) ** 2, dim=1).numpy()
 
-    cyber_ai.threshold = np.percentile(errors, 99.9)
+    cyber_ai.threshold = np.percentile(errors, 99)
 
 cyber_ai.scaler = scaler
 cyber_ai.save()
