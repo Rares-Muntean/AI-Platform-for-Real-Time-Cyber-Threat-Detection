@@ -68,10 +68,13 @@ def monitor_traffic(packet):
             fwd_pkts, bwd_pkts = max(1, flow['fwd_pkts']), max(1, flow['bwd_pkts'])
             total_pkts = fwd_pkts + bwd_pkts
             duration = max(flow['last_time'] - flow['start_time'], 0.0001)
+            is_privileged_port = 1 if flow['dport'] < 1024 else 0
 
             # Features
             feat = [
-                np.log1p(flow['dport']), flow['proto'],
+                np.log1p(flow['dport']),
+                is_privileged_port,
+                flow['proto'],
                 np.log1p(flow['fwd_bytes'] / fwd_pkts),
                 np.log1p(flow['bwd_bytes'] / bwd_pkts),
                 np.log1p((flow['fwd_bytes'] + flow['bwd_bytes']) / total_pkts),
@@ -93,7 +96,7 @@ except KeyboardInterrupt:
     print("\nSniffing stopped by user.")
 finally:
     if len(collected_features) > 0:
-        cols = ['dest_port', 'protocol', 'fwd_pkt_len_mean', 'bwd_pkt_len_mean', 'pkt_len_mean', 'flow_iat_mean',
+        cols = ['dest_port', 'is_privileged_port', 'protocol', 'fwd_pkt_len_mean', 'bwd_pkt_len_mean', 'pkt_len_mean', 'flow_iat_mean',
                 'down_up_ratio', 'fin_flag', 'syn_flag', 'rst_flag', 'psh_flag', 'ack_flag']
         df = pd.DataFrame(collected_features, columns=cols)
 

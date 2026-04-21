@@ -11,14 +11,14 @@ from scapy.all import sniff
 import time
 import joblib
 
-guard = CyberAI(input_dim=12)
+guard = CyberAI(input_dim=13)
 guard.load()
 
 clf_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'models', 'classifier.pkl'))
 classifier = joblib.load(clf_path)
 
 active_flows = {}
-PACKET_LIMIT = 100
+PACKET_LIMIT = 50
 
 
 def monitor_traffic(packet):
@@ -87,6 +87,7 @@ def predict_flow_threat(key):
     duration = max(flow['last_time'] - flow['start_time'], 0.0001)
 
     dest_port = np.log1p(flow['dport'])
+    is_privileged_port = 1 if flow['dport'] < 1024 else 0
     protocol = flow['proto']
     fwd_pkt_len_mean = np.log1p(flow['fwd_bytes'] / fwd_pkts)
     bwd_pkt_len_mean = np.log1p(flow['bwd_bytes'] / bwd_pkts)
@@ -101,7 +102,7 @@ def predict_flow_threat(key):
     psh_flag = 1 if 'P' in flow['flags'] else 0
     ack_flag = 1 if 'A' in flow['flags'] else 0
 
-    ae_features = np.array([[dest_port, protocol, fwd_pkt_len_mean, bwd_pkt_len_mean,
+    ae_features = np.array([[dest_port, is_privileged_port, protocol, fwd_pkt_len_mean, bwd_pkt_len_mean,
                              pkt_len_mean, flow_iat_mean, down_up_ratio,
                              fin_flag, syn_flag, rst_flag, psh_flag, ack_flag]])
 
