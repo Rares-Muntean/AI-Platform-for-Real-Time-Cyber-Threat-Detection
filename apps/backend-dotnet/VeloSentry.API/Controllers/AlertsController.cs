@@ -12,7 +12,7 @@ namespace VeloSentry.API.Controllers
         {
             // Store into Database / Push to frontend with websockets.
 
-            Console.WriteLine($"[ALERT] Threat detected from IP: {alert.SourceIP}");
+            Console.WriteLine($"\n\n[ALERT] Threat detected from IP: {alert.SourceIP}");
             Console.WriteLine($"Target IP: {alert.DestinationIP} |  Port: {alert.DestinationPort} | ANOMALY SCORE: {alert.AnomalyScore}");
             Console.WriteLine($"Protocol: {alert.Protocol}, Total Packets: {alert.TotalPackets}");
             Console.WriteLine($"Time Stamp: {alert.TimeStamp}");
