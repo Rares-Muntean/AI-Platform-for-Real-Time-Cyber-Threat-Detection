@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
-
 var builder = WebApplication.CreateBuilder(args);
 var AllowPythonService = "_allowPythonService";
 var AllowNuxtFrontend = "_allowNuxtFrontend";
@@ -18,7 +16,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: AllowNuxtFrontend,
         policy =>
         {
-            policy.WithOrigins("http://localhost:5000")
+            policy.WithOrigins("http://localhost:5000");
         });
 });
 
@@ -39,4 +37,4 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.Run();
+app.Run("http://0.0.0.0:5284");
