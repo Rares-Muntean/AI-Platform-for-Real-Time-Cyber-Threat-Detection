@@ -3,13 +3,16 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from collections import deque
+from helpers.request import report_threat_to_backend
 import numpy as np
 from scapy.layers.inet import IP, TCP, UDP
 from ai_model.cyber_ai import CyberAI
 from scapy.all import sniff
 import time
 import joblib
+
+
+alert_cooldowns = {}
 
 guard = CyberAI(input_dim=13)
 guard.load()
@@ -50,7 +53,9 @@ def monitor_traffic(packet):
                 'start_time': now, 'last_time': now,
                 'fwd_pkts': 0, 'bwd_pkts': 0,
                 'fwd_bytes': 0, 'bwd_bytes': 0,
-                'flags': "", 'dport': actual_dport, 'proto': proto
+                'flags': "", 'dport': actual_dport, 'proto': proto,
+                'src_ip': src_ip,
+                'dst_ip': dst_ip
             }
 
         flow = active_flows[flow_key]
@@ -107,12 +112,15 @@ def predict_flow_threat(key):
                              fin_flag, syn_flag, rst_flag, psh_flag, ack_flag]])
 
     score, error_vector = guard.get_anomaly_score(ae_features)
+    total_pkts = flow["fwd_pkts"] + flow["bwd_pkts"]
 
     if score > guard.threshold:
         print(f"[!!!] ANOMALY DETECTED | Score: {score:.4f} | Port: {flow['dport']} | Pkts: {total_pkts}")
+
+        report_threat_to_backend(flow, total_pkts, score, alert_cooldowns)
     else:
         print(f"[OK] Normal Traffic  | Score: {score:.4f} | Port: {flow['dport']} | Pkts: {total_pkts}")
 
 
 print("Monitoring started. Awaiting traffic...")
-sniff(prn=monitor_traffic, store=0)
+sniff(prn=monitor_traffic, store=0, filter="ip and not port 5284")
