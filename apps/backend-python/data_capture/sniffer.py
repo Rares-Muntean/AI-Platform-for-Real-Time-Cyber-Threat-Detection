@@ -17,9 +17,6 @@ alert_cooldowns = {}
 guard = CyberAI(input_dim=13)
 guard.load()
 
-clf_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'models', 'classifier.pkl'))
-classifier = joblib.load(clf_path)
-
 active_flows = {}
 PACKET_LIMIT = 50
 
