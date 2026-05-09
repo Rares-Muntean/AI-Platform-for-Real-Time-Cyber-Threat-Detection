@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using VeloSentry.API.Models;
+using Microsoft.EntityFrameworkCore;
+using VeloSentry.API.Database;
+using VeloSentry.API.Database.Models;
 
 namespace VeloSentry.API.Controllers
 {
@@ -7,17 +9,34 @@ namespace VeloSentry.API.Controllers
     [ApiController]
     public class AlertsController : Controller
     {
-        [HttpPost]
-        public IActionResult RecieveAlert([FromBody] ThreatAlert alert)
+        private readonly AppDbContext _db;
+        public AlertsController(AppDbContext db)
         {
-            // Store into Database / Push to frontend with websockets.
+            _db = db;
+        }
 
-            Console.WriteLine($"\n\n[ALERT] Threat detected from IP: {alert.SourceIP}");
+        [HttpGet]
+        public async Task<IActionResult> GetAlerts()
+        {
+            List<ThreatAlert> alerts = await _db.ThreatAlerts.OrderByDescending(a => a.TimeStamp).Take(100).ToListAsync();
+
+            return Ok(alerts);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RecieveAlert([FromBody] ThreatAlert alert)
+        {
+            if (alert == null) return BadRequest();
+
+            _db.ThreatAlerts.Add(alert);
+            await _db.SaveChangesAsync();
+
+            Console.WriteLine($"\n\nALERT saved with this IP: {alert.SourceIP}");
             Console.WriteLine($"Target IP: {alert.DestinationIP} |  Port: {alert.DestinationPort} | ANOMALY SCORE: {alert.AnomalyScore}");
             Console.WriteLine($"Protocol: {alert.Protocol}, Total Packets: {alert.TotalPackets}");
             Console.WriteLine($"Time Stamp: {alert.TimeStamp}");
 
-            return Ok(new { message = "Alert received successfully." });
+            return Ok(new { message = "Alert received successfully.", id = alert.Id });
         }
     }
 }

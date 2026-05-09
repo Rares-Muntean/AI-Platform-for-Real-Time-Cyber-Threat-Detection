@@ -1,4 +1,8 @@
+using Microsoft.EntityFrameworkCore;
+using VeloSentry.API.Database;
+
 var builder = WebApplication.CreateBuilder(args);
+var connectionString = builder.Configuration.GetConnectionString("ApiDatabase");
 var AllowPythonService = "_allowPythonService";
 var AllowNuxtFrontend = "_allowNuxtFrontend";
 
@@ -19,6 +23,8 @@ builder.Services.AddCors(options =>
             policy.WithOrigins("http://localhost:5000");
         });
 });
+builder.Services.AddDbContext<AppDbContext>(options =>
+ options.UseNpgsql(connectionString));
 
 var app = builder.Build();
 
