@@ -1,6 +1,7 @@
 <script setup lang="ts"></script>
 
 <template>
-    <SignUp />
-    <!-- <UserDashboard /> -->
+    <NuxtLayout>
+        <NuxtPage />
+    </NuxtLayout>
 </template>

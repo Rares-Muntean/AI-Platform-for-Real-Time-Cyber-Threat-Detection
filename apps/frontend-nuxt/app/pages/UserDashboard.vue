@@ -18,26 +18,17 @@ const yAxisLabels = [70, 60, 50, 40, 30, 20, 10, 0];
                     <p class="nav-title">MONITORING</p>
                     <div class="items">
                         <div class="item selected">
-                            <img
-                                src="/images/icons/material-symbols--dashboard-2.svg"
-                                alt=""
-                            />
+                            <Icon name="material-symbols:dashboard-2" />
                             <p class="item-name">Dashboard</p>
                         </div>
 
                         <div class="item">
-                            <img
-                                src="/images/icons/material-symbols--bolt-rounded.svg"
-                                alt=""
-                            />
+                            <Icon name="material-symbols:bolt-rounded" />
                             <p class="item-name">Live Feed</p>
                         </div>
 
                         <div class="item">
-                            <img
-                                src="/images/icons//material-symbols--shield-rounded.svg"
-                                alt=""
-                            />
+                            <Icon name="material-symbols:shield-rounded" />
                             <p class="item-name">Incidents</p>
                         </div>
                     </div>
@@ -47,17 +38,13 @@ const yAxisLabels = [70, 60, 50, 40, 30, 20, 10, 0];
                     <p class="nav-title">SYSTEM</p>
                     <div class="items">
                         <div class="item">
-                            <img
-                                src="/images/icons/material-symbols--settings-rounded.svg"
-                                alt=""
-                            />
+                            <Icon name="material-symbols:settings-rounded" />
                             <p class="item-name">Settings</p>
                         </div>
 
                         <div class="item">
-                            <img
-                                src="/images/icons/material-symbols--partly-cloudy-night-rounded (1).svg"
-                                alt=""
+                            <Icon
+                                name="material-symbols:partly-cloudy-night-rounded"
                             />
                             <p class="item-name">Night Mode</p>
                         </div>
@@ -68,18 +55,12 @@ const yAxisLabels = [70, 60, 50, 40, 30, 20, 10, 0];
                     <p class="nav-title">ACCOUNT</p>
                     <div class="items">
                         <div class="item">
-                            <img
-                                src="/images/icons/material-symbols--account-circle.svg"
-                                alt=""
-                            />
+                            <Icon name="material-symbols:account-circle" />
                             <p class="item-name">Ion Popescu</p>
                         </div>
 
                         <div class="item">
-                            <img
-                                src="/images/icons/material-symbols--exit-to-app-rounded.svg"
-                                alt=""
-                            />
+                            <Icon name="material-symbols:exit-to-app-rounded" />
                             <p class="item-name">Log Out</p>
                         </div>
                     </div>
@@ -114,4 +95,4 @@ const yAxisLabels = [70, 60, 50, 40, 30, 20, 10, 0];
     </section>
 </template>
 
-<style lang="scss" src="~/assets/scss/scoped/UserDashboard.scss"></style>
+<style lang="scss" scoped src="~/assets/scss/scoped/UserDashboard.scss"></style>
