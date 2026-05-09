@@ -9,7 +9,6 @@ from scapy.layers.inet import IP, TCP, UDP
 from ai_model.cyber_ai import CyberAI
 from scapy.all import sniff
 import time
-import joblib
 
 
 alert_cooldowns = {}
