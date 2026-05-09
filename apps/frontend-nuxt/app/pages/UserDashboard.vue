@@ -1,9 +1,44 @@
 <script lang="ts" setup>
-const { getHistory } = useAlerts();
-const { data: alerts, refresh, pending } = await getHistory();
+import type { ThreatAlert } from "~/models/threatAlert";
+
+const { getHistory, getLast } = useAlerts();
+const { data: alerts, refresh, pending } = await getLast();
 
 let interval: any;
 const yAxisLabels = [70, 60, 50, 40, 30, 20, 10, 0];
+
+interface DisplayField {
+    label: string;
+    key: keyof ThreatAlert;
+    format?: (val: any) => string;
+}
+
+const displayFields: DisplayField[] = [
+    { label: "Source IP", key: "sourceIp" },
+    { label: "Target IP", key: "destinationIp" },
+    { label: "Port", key: "destinationPort" },
+    { label: "Protocol", key: "protocol" },
+    { label: "Total Packets", key: "totalPackets" },
+    {
+        label: "Anomaly Score",
+        key: "anomalyScore",
+        format: (val: number) => (Math.floor(val * 1000) / 1000).toFixed(3),
+    },
+    {
+        label: "Detected At",
+        key: "timeStamp",
+        format: (val: string) => {
+            if (!val) return "N/A";
+
+            const date = new Date(val);
+            return date.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+            });
+        },
+    },
+];
 
 onMounted(() => {
     interval = setInterval(() => {
@@ -137,12 +172,39 @@ watch(
                     </template>
                 </DashboardCard>
 
-                <DashboardCard class="last-alert">
-                    <template #content> Last Alert </template>
+                <DashboardCard class="alert-count primary">
+                    <template #content>Alert Count</template>
                 </DashboardCard>
 
-                <DashboardCard class="alert-count">
-                    <template #content>Alert Count</template>
+                <DashboardCard class="last-alert primary">
+                    <template #content>
+                        <p>Last Alert</p>
+
+                        <div v-if="alerts" class="alert-info">
+                            <div
+                                v-for="field in displayFields"
+                                :key="field.key"
+                                class="info-item"
+                            >
+                                <p class="info-name">{{ field.label }}</p>
+                                <p>
+                                    {{
+                                        field.format
+                                            ? field.format(alerts[field.key])
+                                            : alerts[field.key]
+                                    }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div v-else-if="pending" class="empty-state">
+                            <p>Syncing with server...</p>
+                        </div>
+
+                        <div v-else class="empty-state">
+                            <p>No threats detected.</p>
+                        </div>
+                    </template>
                 </DashboardCard>
             </section>
         </div>

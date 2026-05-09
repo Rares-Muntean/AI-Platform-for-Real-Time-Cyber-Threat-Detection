@@ -3,8 +3,8 @@
     public class ThreatAlert
     {
         public int Id { get; set; }
-        public string SourceIP { get; set; } = string.Empty;
-        public string DestinationIP { get; set; } = string.Empty;
+        public string SourceIp { get; set; } = string.Empty;
+        public string DestinationIp { get; set; } = string.Empty;
         public int DestinationPort { get; set; }
         public int Protocol { get; set; }
         public double TotalPackets { get; set; }

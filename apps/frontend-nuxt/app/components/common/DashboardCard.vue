@@ -12,5 +12,9 @@
     border: solid 2px $whiteText20;
 
     padding: 1.6rem 1.8rem;
+
+    &.primary {
+        border-color: $primaryColor70;
+    }
 }
 </style>

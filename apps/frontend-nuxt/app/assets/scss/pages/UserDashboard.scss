@@ -101,6 +101,7 @@ $anomalyChartHeight: 280px;
 
     font-size: 1.8rem;
     font-weight: 500;
+    align-items: start;
 }
 
 .anomaly-history {
@@ -171,10 +172,31 @@ y-axis span {
     }
 }
 
-.last-alert {
+.alert-count {
     grid-column: span 4;
 }
 
-.alert-count {
+.last-alert {
     grid-column: span 8;
+
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.alert-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+
+    padding: 0px 12px;
+}
+
+.info-name {
+    opacity: 0.75;
 }

@@ -1,6 +1,6 @@
 export interface ThreatAlert {
-    sourceIP: string;
-    destinationIP: string;
+    sourceIp: string;
+    destinationIp: string;
     destinationPort: number;
     protocol: number;
     totalPackets: number;

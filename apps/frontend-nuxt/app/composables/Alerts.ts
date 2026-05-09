@@ -10,7 +10,14 @@ export const useAlerts = () => {
         });
     };
 
+    const getLast = async () => {
+        return await useFetch<ThreatAlert>(`${baseUrl}/api/alerts/last`, {
+            key: "last-alert",
+        });
+    };
+
     return {
+        getLast,
         getHistory,
     };
 };

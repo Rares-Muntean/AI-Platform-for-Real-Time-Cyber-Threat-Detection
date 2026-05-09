@@ -23,6 +23,15 @@ namespace VeloSentry.API.Controllers
             return Ok(alerts);
         }
 
+        [HttpGet("last")]
+        public async Task<IActionResult> GetLastAlert()
+        {
+            ThreatAlert? lastAlert = await _db.ThreatAlerts.OrderByDescending(a => a.TimeStamp).FirstOrDefaultAsync();
+            if (lastAlert == null) return NotFound(new { message = "No alerts found in database." });
+
+            return Ok(lastAlert);
+        }
+
         [HttpPost("add")]
         public async Task<IActionResult> AddAlert([FromBody] ThreatAlert alert)
         {
@@ -31,8 +40,8 @@ namespace VeloSentry.API.Controllers
             _db.ThreatAlerts.Add(alert);
             await _db.SaveChangesAsync();
 
-            Console.WriteLine($"\n\nALERT saved with this IP: {alert.SourceIP}");
-            Console.WriteLine($"Target IP: {alert.DestinationIP} |  Port: {alert.DestinationPort} | ANOMALY SCORE: {alert.AnomalyScore}");
+            Console.WriteLine($"\n\nALERT saved with this IP: {alert.SourceIp}");
+            Console.WriteLine($"Target IP: {alert.DestinationIp} |  Port: {alert.DestinationPort} | ANOMALY SCORE: {alert.AnomalyScore}");
             Console.WriteLine($"Protocol: {alert.Protocol}, Total Packets: {alert.TotalPackets}");
             Console.WriteLine($"Time Stamp: {alert.TimeStamp}");
 
