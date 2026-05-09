@@ -1,5 +1,26 @@
 <script lang="ts" setup>
+const { getHistory } = useAlerts();
+const { data: alerts, refresh, pending } = await getHistory();
+
+let interval: any;
 const yAxisLabels = [70, 60, 50, 40, 30, 20, 10, 0];
+
+onMounted(() => {
+    interval = setInterval(() => {
+        refresh();
+    }, 3000);
+});
+
+onUnmounted(() => {
+    clearInterval(interval);
+});
+
+watch(
+    () => alerts.value,
+    (newVal) => {
+        console.log("Data retrieved: ", newVal);
+    },
+);
 </script>
 
 <template>

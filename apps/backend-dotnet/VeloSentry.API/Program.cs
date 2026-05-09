@@ -3,24 +3,20 @@ using VeloSentry.API.Database;
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("ApiDatabase");
-var AllowPythonService = "_allowPythonService";
-var AllowNuxtFrontend = "_allowNuxtFrontend";
+var allowAllPolicy = "AllowAll";
+
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy(name: AllowPythonService,
+    options.AddPolicy(name: allowAllPolicy,
         policy =>
         {
-            policy.WithOrigins("http://localhost:8080");
-        });
-
-    options.AddPolicy(name: AllowNuxtFrontend,
-        policy =>
-        {
-            policy.WithOrigins("http://localhost:5000");
+            policy.AllowAnyOrigin()
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
         });
 });
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -35,12 +31,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseCors(allowAllPolicy);
+
 app.UseHttpsRedirection();
-
-app.UseCors(AllowPythonService);
-
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run("http://0.0.0.0:5284");

@@ -5,7 +5,7 @@ import requests
 
 
 ########## BACKEND CONFIG ##########
-API_URL = "http://192.168.1.226:5284/api/alerts"
+API_BASE = "http://192.168.1.226:5284/api/alerts/add"
 COOLDOWN_SECONDS = 60
 ####################################
 
@@ -26,12 +26,12 @@ def report_threat_to_backend(flow, total_pkts, score, alert_cooldowns):
         "destinationPort": int(flow["dport"]),
         "protocol": int(flow["proto"]),
         "anomalyScore": float(score),
-        "totalPackets": int(total_pkts),
-        "timestamp": datetime.now(timezone.utc).isoformat()
+        "totalPackets": float(total_pkts),
+        "timeStamp": datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ') 
     }
 
     try:
-        response = requests.post(API_URL, json=payload, timeout=5)
+        response = requests.post(API_BASE, json=payload, timeout=5)
         if response.status_code == 200:
             print(f"[API] Succesfully sent alert for {attacker_ip} to backend")
     except Exception as e:

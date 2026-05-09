@@ -1,29 +1,35 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  compatibilityDate: "2025-07-15",
-  devtools: { enabled: true },
+    compatibilityDate: "2025-07-15",
+    devtools: { enabled: true },
 
-  css: [
-      "~/assets/scss/global/_global.scss",
-      "~/assets/scss/global/_fonts.scss",
-  ],
+    css: [
+        "~/assets/scss/global/_global.scss",
+        "~/assets/scss/global/_fonts.scss",
+    ],
 
-  vite: {
-      css: {
-          preprocessorOptions: {
-              scss: {
-                  additionalData: `@use "@/assets/scss/global/_variables.scss" as * ;`,
-              },
-          },
-      },
-  },
+    vite: {
+        css: {
+            preprocessorOptions: {
+                scss: {
+                    additionalData: `@use "@/assets/scss/global/_variables.scss" as * ;`,
+                },
+            },
+        },
+    },
 
-  components: [
-      {
-          path: "components",
-          pathPrefix: false,
-      },
-  ],
+    components: [
+        {
+            path: "components",
+            pathPrefix: false,
+        },
+    ],
 
-  modules: ["@nuxt/icon"],
+    modules: ["@nuxt/icon"],
+
+    runtimeConfig: {
+        public: {
+            apiBase: "http://localhost:5284",
+        },
+    },
 });

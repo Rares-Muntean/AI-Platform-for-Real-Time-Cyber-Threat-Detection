@@ -15,7 +15,7 @@ namespace VeloSentry.API.Controllers
             _db = db;
         }
 
-        [HttpGet]
+        [HttpGet("all")]
         public async Task<IActionResult> GetAlerts()
         {
             List<ThreatAlert> alerts = await _db.ThreatAlerts.OrderByDescending(a => a.TimeStamp).Take(100).ToListAsync();
@@ -23,8 +23,8 @@ namespace VeloSentry.API.Controllers
             return Ok(alerts);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> RecieveAlert([FromBody] ThreatAlert alert)
+        [HttpPost("add")]
+        public async Task<IActionResult> AddAlert([FromBody] ThreatAlert alert)
         {
             if (alert == null) return BadRequest();
 
