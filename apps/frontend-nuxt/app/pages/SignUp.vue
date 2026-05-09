@@ -92,4 +92,4 @@ const handleSubmit = () => {
     </section>
 </template>
 
-<style lang="scss" scoped src="~/assets/scss/scoped/SignUp.scss"></style>
+<style lang="scss" scoped src="~/assets/scss/pages/SignUp.scss"></style>
