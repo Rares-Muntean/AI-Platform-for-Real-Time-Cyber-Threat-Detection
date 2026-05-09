@@ -1,6 +1,6 @@
 <script setup lang="ts"></script>
 
 <template>
-    <!-- <SignUp /> -->
-    <UserDashboard />
+    <SignUp />
+    <!-- <UserDashboard /> -->
 </template>

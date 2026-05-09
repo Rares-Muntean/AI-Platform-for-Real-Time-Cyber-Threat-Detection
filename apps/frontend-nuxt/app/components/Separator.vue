@@ -4,4 +4,14 @@
 
 <script lang="ts" setup></script>
 
-<style lang="scss" src="~/assets/scss/scoped/Separator.scss"></style>
+<style lang="scss">
+.separator {
+    height: 2px;
+    background: linear-gradient(
+        to right,
+        $primaryColor,
+        $primaryBackgroundColor
+    );
+    border-radius: 3px;
+}
+</style>

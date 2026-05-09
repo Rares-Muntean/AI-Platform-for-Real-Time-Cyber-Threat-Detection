@@ -25,4 +25,17 @@ const props = defineProps<{
     ></div>
 </template>
 
-<style lang="scss" src="~/assets/scss/scoped/RadialGradient.scss"></style>
+<style lang="scss">
+.radial-gradient {
+    position: absolute;
+
+    background: radial-gradient(
+        circle,
+        rgba(71, 188, 246, 0.4) 5%,
+        rgba(71, 188, 246, 0.05) 60%,
+        transparent 70%
+    );
+
+    z-index: 0;
+}
+</style>
