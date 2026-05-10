@@ -5,6 +5,8 @@ using VeloSentry.API.Services;
 
 namespace VeloSentry.API.Controllers
 {
+    [Route("api/[controller]")]
+    [ApiController]
     public class UsersController : Controller
     {
         public readonly AppDbContext _db;

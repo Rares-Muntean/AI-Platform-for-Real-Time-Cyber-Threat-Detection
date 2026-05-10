@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using VeloSentry.API.Database;
+using VeloSentry.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("ApiDatabase");
@@ -21,6 +22,9 @@ builder.Services.AddCors(options =>
 });
 builder.Services.AddDbContext<AppDbContext>(options =>
  options.UseNpgsql(connectionString));
+
+// DEPENDENCY INJECTION REGISTERING
+builder.Services.AddScoped<IPasswordService, PasswordService>();
 
 var app = builder.Build();
 
