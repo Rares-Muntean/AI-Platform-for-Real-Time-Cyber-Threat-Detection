@@ -178,21 +178,26 @@ y-axis span {
 
 .last-alert {
     grid-column: span 8;
+}
 
+.top-card {
     display: flex;
-    flex-direction: column;
-    gap: 2rem;
+    justify-content: space-between;
 }
 
 .alert-info {
-    display: flex;
-    flex-direction: column;
+    font-size: 1.6rem;
+    font-weight: 400;
+
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
     gap: 1.2rem;
 }
 
 .info-item {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
+    gap: 0.6rem;
 
     padding: 0px 12px;
 }

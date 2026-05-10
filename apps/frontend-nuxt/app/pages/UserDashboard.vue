@@ -16,29 +16,26 @@ interface DisplayField {
 const displayFields: DisplayField[] = [
     { label: "Source IP", key: "sourceIp" },
     { label: "Target IP", key: "destinationIp" },
-    { label: "Port", key: "destinationPort" },
     { label: "Protocol", key: "protocol" },
+    { label: "Port", key: "destinationPort" },
     { label: "Total Packets", key: "totalPackets" },
     {
         label: "Anomaly Score",
         key: "anomalyScore",
         format: (val: number) => (Math.floor(val * 1000) / 1000).toFixed(3),
     },
-    {
-        label: "Detected At",
-        key: "timeStamp",
-        format: (val: string) => {
-            if (!val) return "N/A";
-
-            const date = new Date(val);
-            return date.toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-                second: "2-digit",
-            });
-        },
-    },
 ];
+
+function formatTimeStamp(val: string) {
+    if (!val) return "N/A";
+
+    const date = new Date(val);
+    return date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+    });
+}
 
 onMounted(() => {
     interval = setInterval(() => {
@@ -147,9 +144,10 @@ watch(
             <h2 class="panel-title">Dashboard</h2>
             <section class="dashboard-section">
                 <DashboardCard class="anomaly-history">
+                    <template #title-card>
+                        <p>ANOMALY HISTORY</p>
+                    </template>
                     <template #content>
-                        <p class="chart-title">Anomaly History</p>
-
                         <div class="chart-container">
                             <div class="y-axis">
                                 <span
@@ -172,14 +170,24 @@ watch(
                     </template>
                 </DashboardCard>
 
-                <DashboardCard class="alert-count primary">
-                    <template #content>Alert Count</template>
+                <DashboardCard class="alert-count">
+                    <template #title-card>
+                        <p>ALERT COUNT</p>
+                    </template>
+                    <template #content> </template>
                 </DashboardCard>
 
-                <DashboardCard class="last-alert primary">
-                    <template #content>
-                        <p>Last Alert</p>
+                <DashboardCard class="last-alert">
+                    <template #title-card>
+                        <div class="top-card">
+                            <p>LAST ALERT</p>
+                            <p v-if="alerts">
+                                {{ formatTimeStamp(alerts?.timeStamp) }}
+                            </p>
+                        </div>
+                    </template>
 
+                    <template #content>
                         <div v-if="alerts" class="alert-info">
                             <div
                                 v-for="field in displayFields"
