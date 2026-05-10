@@ -94,6 +94,19 @@ form {
     .btn-signup {
         margin-bottom: 5rem;
     }
+
+    .password-input {
+        display: flex;
+        flex-direction: column;
+
+        gap: 0.8rem;
+    }
+
+    .validation-msg {
+        color: $redColor;
+        font-size: 1.2rem;
+        font-weight: 400;
+    }
 }
 
 .login-redirect {

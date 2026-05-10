@@ -1,15 +1,72 @@
 <script lang="ts" setup>
 import { reactive } from "vue";
+import type { User } from "~/models/user";
+const { createAccount } = useUsers();
 
-const form = reactive({
+const form: User = reactive({
     firstName: "",
     lastName: "",
     email: "",
     password: "",
 });
 
-const handleSubmit = () => {
-    console.log("Form Submitted:", form);
+const validationError = ref("");
+
+const getPasswordRequirements = () => {
+    const missing = [];
+    if (form.password.length < 8) missing.push("8+ characters");
+    if (!/[A-Z]/.test(form.password)) missing.push("uppercase");
+    if (!/\d/.test(form.password)) missing.push("number");
+    if (!/[!@#$%&?]/.test(form.password)) missing.push("special character");
+    return missing;
+};
+
+watch(
+    () => form.password,
+    () => {
+        if (
+            validationError.value &&
+            !validationError.value.includes("Server error")
+        ) {
+            const missing = getPasswordRequirements();
+
+            if (missing.length === 0) {
+                validationError.value = "";
+            } else {
+                validationError.value =
+                    "Password needs: " + missing.join(", ") + ".";
+            }
+        }
+    },
+);
+
+const handleSubmit = async () => {
+    const missing = getPasswordRequirements();
+    if (missing.length > 0) {
+        validationError.value = "Password needs: " + missing.join(", ") + ".";
+        return;
+    }
+
+    try {
+        await createAccount({
+            firstName: form.firstName,
+            lastName: form.lastName,
+            email: form.email,
+            password: form.password,
+        });
+
+        Object.assign(form, {
+            firstName: "",
+            lastName: "",
+            email: "",
+            password: "",
+        });
+
+        validationError.value = "";
+    } catch (e: any) {
+        console.error("Singup Failed: ", e);
+        validationError.value = "Server error. Please try again.";
+    }
 };
 </script>
 
@@ -57,6 +114,7 @@ const handleSubmit = () => {
                             type="text"
                             id="first-name"
                             placeholder="First Name"
+                            required
                         />
 
                         <input
@@ -64,21 +122,31 @@ const handleSubmit = () => {
                             type="text"
                             id="last-name"
                             placeholder="Last Name"
+                            required
                         />
                     </div>
 
                     <input
                         v-model="form.email"
-                        type="text"
+                        type="email"
                         id="email"
                         placeholder="Email"
+                        required
                     />
-                    <input
-                        v-model="form.password"
-                        type="text"
-                        id="password"
-                        placeholder="Password"
-                    />
+
+                    <div class="password-input">
+                        <input
+                            v-model="form.password"
+                            type="password"
+                            id="password"
+                            placeholder="Password"
+                            required
+                        />
+
+                        <p v-if="validationError" class="validation-msg">
+                            {{ validationError }}
+                        </p>
+                    </div>
                 </div>
 
                 <button type="submit" class="btn-primary stretched btn-signup">
