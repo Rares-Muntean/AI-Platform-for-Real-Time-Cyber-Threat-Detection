@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using VeloSentry.API.Database;
 using VeloSentry.API.Database.Models;
 using VeloSentry.API.Services;
 
@@ -9,24 +8,27 @@ namespace VeloSentry.API.Controllers
     [ApiController]
     public class UsersController : Controller
     {
-        public readonly AppDbContext _db;
-        public readonly IPasswordService _passwordService;
+        public readonly IUsersService _userService;
 
-        public UsersController(AppDbContext db, IPasswordService passwordService)
+        public UsersController(IUsersService userService)
         {
-            _db = db;
-            _passwordService = passwordService;
+            _userService = userService;
         }
 
         [HttpPost("create")]
         public async Task<IActionResult> CreateAccount([FromBody] User user)
         {
-            user.Password = _passwordService.HashPassword(user.Password);
-
-            _db.Users.Add(user);
-            await _db.SaveChangesAsync();
-
+            await _userService.RegisterUser(user);
             return Ok(new { message = "Account created (pass tokens later)" });
+        }
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
+        {
+            var token = await _userService.LoginUser(loginDto);
+            if (token == null) return Unauthorized(new { message = "Invalid credentials" });
+
+            return Ok(new { token });
         }
     }
 }
