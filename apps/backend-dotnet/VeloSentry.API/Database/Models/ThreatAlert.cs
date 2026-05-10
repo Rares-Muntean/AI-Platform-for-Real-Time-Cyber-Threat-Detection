@@ -10,5 +10,8 @@
         public double TotalPackets { get; set; }
         public double AnomalyScore { get; set; }
         public DateTime TimeStamp { get; set; }
+
+        public int UserId { get; set; }
+        public User User { get; set; } = new User();
     }
 }
