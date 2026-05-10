@@ -57,6 +57,21 @@ watch(
 
 <template>
     <section class="section">
+        <RadialGradient
+            :position-x="-65"
+            :position-y="-20"
+            :size="700"
+            :opacity="0.5"
+        />
+
+        <RadialGradient
+            :position-x="68"
+            :position-y="0"
+            :size="1300"
+            :opacity="0.5"
+            :right="0"
+            :top="0"
+        />
         <div class="left-panel">
             <div class="logo-container">
                 <div class="logo-wrapper">

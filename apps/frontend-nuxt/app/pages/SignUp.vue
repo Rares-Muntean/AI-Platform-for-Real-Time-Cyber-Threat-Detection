@@ -16,17 +16,18 @@ const handleSubmit = () => {
 <template>
     <section class="section">
         <RadialGradient
-            :size="1300"
+            :size="1500"
             :position-x="-50"
             :position-y="40"
             :bottom="0"
             :left="0"
+            :opacity="1"
         />
 
         <RadialGradient
             :size="800"
             :position-x="65"
-            :position-y="40"
+            :position-y="45"
             :bottom="0"
             :right="0"
         />

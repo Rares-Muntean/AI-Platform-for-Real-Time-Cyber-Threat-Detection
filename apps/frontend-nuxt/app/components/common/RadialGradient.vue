@@ -1,41 +1,55 @@
 <script lang="ts" setup>
-const props = defineProps<{
-    size: number;
-    positionX: number;
-    positionY: number;
-    bottom?: number;
-    top?: number;
-    left?: number;
-    right?: number;
-}>();
+const props = withDefaults(
+    defineProps<{
+        size: number;
+        positionX: number;
+        positionY: number;
+        src?: string;
+        bottom?: number;
+        top?: number;
+        left?: number;
+        right?: number;
+        opacity?: number;
+    }>(),
+    {
+        opacity: 0.8,
+        src: "/images/glow-primary.png",
+    },
+);
 </script>
 
 <template>
     <div
-        class="radial-gradient"
+        class="glow-container"
         :style="{
-            width: props.size + 'px',
-            height: props.size + 'px',
-            transform: `translate(${props.positionX}%, ${props.positionY}%)`,
-            bottom: props.bottom + 'px',
-            top: props.top + 'px',
-            left: props.left + 'px',
-            right: props.right + 'px',
+            width: size + 'px',
+            height: size + 'px',
+            transform: `translate(${positionX}%, ${positionY}%)`,
+            bottom: bottom + 'px',
+            top: top + 'px',
+            left: left + 'px',
+            right: right + 'px',
+            opacity: opacity,
         }"
-    ></div>
+    >
+        <img :src="src" class="glow-image" alt="" />
+    </div>
 </template>
 
-<style lang="scss">
-.radial-gradient {
+<style lang="scss" scoped>
+.glow-container {
     position: absolute;
-
-    background: radial-gradient(
-        circle,
-        rgba(71, 188, 246, 0.4) 5%,
-        rgba(71, 188, 246, 0.05) 60%,
-        transparent 70%
-    );
-
+    pointer-events: none;
     z-index: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.glow-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    image-rendering: -webkit-optimize-contrast;
 }
 </style>
