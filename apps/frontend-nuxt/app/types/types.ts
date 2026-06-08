@@ -20,7 +20,7 @@ export interface User {
 export interface NavItem {
     name: string;
     icon: string;
-    value: string;
+    to: string;
 }
 
 export interface NavGroup {

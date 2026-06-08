@@ -3,6 +3,8 @@ import { reactive } from "vue";
 import type { User } from "~/types/types";
 const { createAccount } = useUsers();
 
+definePageMeta({ layout: false });
+
 const form: User = reactive({
     firstName: "",
     lastName: "",
@@ -20,25 +22,6 @@ const getPasswordRequirements = () => {
     if (!/[!@#$%&?]/.test(form.password)) missing.push("special character");
     return missing;
 };
-
-watch(
-    () => form.password,
-    () => {
-        if (
-            validationError.value &&
-            !validationError.value.includes("Server error")
-        ) {
-            const missing = getPasswordRequirements();
-
-            if (missing.length === 0) {
-                validationError.value = "";
-            } else {
-                validationError.value =
-                    "Password needs: " + missing.join(", ") + ".";
-            }
-        }
-    },
-);
 
 const handleSubmit = async () => {
     const missing = getPasswordRequirements();
@@ -68,6 +51,25 @@ const handleSubmit = async () => {
         validationError.value = "Server error. Please try again.";
     }
 };
+
+watch(
+    () => form.password,
+    () => {
+        if (
+            validationError.value &&
+            !validationError.value.includes("Server error")
+        ) {
+            const missing = getPasswordRequirements();
+
+            if (missing.length === 0) {
+                validationError.value = "";
+            } else {
+                validationError.value =
+                    "Password needs: " + missing.join(", ") + ".";
+            }
+        }
+    },
+);
 </script>
 
 <template>

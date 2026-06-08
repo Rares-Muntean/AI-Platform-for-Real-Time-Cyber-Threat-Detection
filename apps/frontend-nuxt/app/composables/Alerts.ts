@@ -1,4 +1,4 @@
-import type { ThreatAlert } from "~/models/threatAlert";
+import type { ThreatAlert } from "~/types/types";
 
 export const useAlerts = () => {
     const config = useRuntimeConfig();

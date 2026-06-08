@@ -1,4 +1,4 @@
-import type { User } from "~/models/user";
+import type { User } from "~/types/types";
 
 export const useUsers = () => {
     const config = useRuntimeConfig();

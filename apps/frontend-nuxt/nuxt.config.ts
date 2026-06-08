@@ -6,6 +6,7 @@ export default defineNuxtConfig({
     css: [
         "~/assets/scss/global/_global.scss",
         "~/assets/scss/global/_fonts.scss",
+        "~/assets/scss/global/_transitions.scss",
     ],
 
     vite: {
@@ -15,6 +16,13 @@ export default defineNuxtConfig({
                     additionalData: `@use "@/assets/scss/global/_variables.scss" as * ;`,
                 },
             },
+        },
+    },
+
+    app: {
+        pageTransition: {
+            name: "page",
+            mode: "out-in",
         },
     },
 
