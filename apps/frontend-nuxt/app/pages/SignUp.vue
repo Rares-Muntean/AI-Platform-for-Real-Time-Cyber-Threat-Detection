@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { reactive } from "vue";
-import type { User } from "~/models/user";
+import type { User } from "~/types/types";
 const { createAccount } = useUsers();
 
 const form: User = reactive({

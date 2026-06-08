@@ -1,42 +1,11 @@
 <script lang="ts" setup>
-import type { ThreatAlert } from "~/models/threatAlert";
+import type { DisplayField, NavGroup } from "~/types/types";
 
+// REFS + BASE MOUNTS
 const { getHistory, getLast } = useAlerts();
 const { data: alerts, refresh, pending } = await getLast();
 
 let interval: any;
-const yAxisLabels = [70, 60, 50, 40, 30, 20, 10, 0];
-
-interface DisplayField {
-    label: string;
-    key: keyof ThreatAlert;
-    format?: (val: any) => string;
-}
-
-const displayFields: DisplayField[] = [
-    { label: "Source IP", key: "sourceIp" },
-    { label: "Target IP", key: "destinationIp" },
-    { label: "Protocol", key: "protocol" },
-    { label: "Port", key: "destinationPort" },
-    { label: "Total Packets", key: "totalPackets" },
-    {
-        label: "Anomaly Score",
-        key: "anomalyScore",
-        format: (val: number) => (Math.floor(val * 1000) / 1000).toFixed(3),
-    },
-];
-
-function formatTimeStamp(val: string) {
-    if (!val) return "N/A";
-
-    const date = new Date(val);
-    return date.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-    });
-}
-
 onMounted(() => {
     interval = setInterval(() => {
         refresh();
@@ -53,6 +22,96 @@ watch(
         console.log("Data retrieved: ", newVal);
     },
 );
+
+const yAxisLabels = [70, 60, 50, 40, 30, 20, 10, 0];
+const displayFields: DisplayField[] = [
+    { label: "Source IP", key: "sourceIp" },
+    { label: "Target IP", key: "destinationIp" },
+    { label: "Protocol", key: "protocol" },
+    { label: "Port", key: "destinationPort" },
+    { label: "Total Packets", key: "totalPackets" },
+    {
+        label: "Anomaly Score",
+        key: "anomalyScore",
+        format: (val: number) => (Math.floor(val * 1000) / 1000).toFixed(3),
+    },
+];
+
+const activeTab = ref("Dashboard");
+const navigationGroups: NavGroup[] = [
+    {
+        title: "MONITORING",
+        items: [
+            {
+                name: "Dashboard",
+                icon: "material-symbols:dashboard-2",
+                value: "Dashboard",
+            },
+            {
+                name: "Live Feed",
+                icon: "material-symbols:bolt-rounded",
+                value: "Live Feed",
+            },
+            {
+                name: "Incidents",
+                icon: "material-symbols:shield-rounded",
+                value: "Incidents",
+            },
+        ],
+    },
+    {
+        title: "SYSTEM",
+        items: [
+            {
+                name: "Settings",
+                icon: "material-symbols:settings-rounded",
+                value: "Settings",
+            },
+            {
+                name: "Night Mode",
+                icon: "material-symbols:partly-cloudy-night-rounded",
+                value: "Night Mode",
+            },
+        ],
+    },
+    {
+        title: "ACCOUNT",
+        items: [
+            {
+                name: "Ion Popescu",
+                icon: "material-symbols:account-circle",
+                value: "Profile",
+            },
+            {
+                name: "Log Out",
+                icon: "material-symbols:exit-to-app-rounded",
+                value: "Log Out",
+            },
+        ],
+    },
+];
+
+// FUNCTIONS
+const formatTimeStamp = (val: string) => {
+    if (!val) return "N/A";
+
+    const date = new Date(val);
+    return date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+    });
+};
+
+const toggleActiveTab = (pageName: string) => {
+    if (activeTab.value === pageName) {
+        return;
+    } else {
+        activeTab.value = pageName;
+    }
+
+    console.log(activeTab.value);
+};
 </script>
 
 <template>
@@ -82,73 +141,23 @@ watch(
             </div>
 
             <div class="sidenav-container">
-                <div class="nav-group">
-                    <p class="nav-title">MONITORING</p>
+                <div
+                    v-for="group in navigationGroups"
+                    :key="group.title"
+                    class="nav-group"
+                >
+                    <p class="nav-title">{{ group.title }}</p>
+
                     <div class="items">
-                        <div class="item selected">
-                            <Icon
-                                name="material-symbols:dashboard-2"
-                                class="icon"
-                            />
-                            <p class="item-name">Dashboard</p>
-                        </div>
-
-                        <div class="item">
-                            <Icon
-                                name="material-symbols:bolt-rounded"
-                                class="icon"
-                            />
-                            <p class="item-name">Live Feed</p>
-                        </div>
-
-                        <div class="item">
-                            <Icon
-                                name="material-symbols:shield-rounded"
-                                class="icon"
-                            />
-                            <p class="item-name">Incidents</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="nav-group">
-                    <p class="nav-title">SYSTEM</p>
-                    <div class="items">
-                        <div class="item">
-                            <Icon
-                                name="material-symbols:settings-rounded"
-                                class="icon"
-                            />
-                            <p class="item-name">Settings</p>
-                        </div>
-
-                        <div class="item">
-                            <Icon
-                                name="material-symbols:partly-cloudy-night-rounded"
-                                class="icon"
-                            />
-                            <p class="item-name">Night Mode</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="nav-group">
-                    <p class="nav-title">ACCOUNT</p>
-                    <div class="items">
-                        <div class="item">
-                            <Icon
-                                name="material-symbols:account-circle"
-                                class="icon"
-                            />
-                            <p class="item-name">Ion Popescu</p>
-                        </div>
-
-                        <div class="item">
-                            <Icon
-                                name="material-symbols:exit-to-app-rounded"
-                                class="icon"
-                            />
-                            <p class="item-name">Log Out</p>
+                        <div
+                            v-for="item in group.items"
+                            :key="item.value"
+                            class="item"
+                            :class="{ selected: activeTab === item.value }"
+                            @click="toggleActiveTab(item.value)"
+                        >
+                            <Icon :name="item.icon" class="icon" />
+                            <p class="item-name">{{ item.name }}</p>
                         </div>
                     </div>
                 </div>

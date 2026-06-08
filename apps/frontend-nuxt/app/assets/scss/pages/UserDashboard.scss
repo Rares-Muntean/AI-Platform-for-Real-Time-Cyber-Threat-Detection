@@ -70,12 +70,13 @@ $anomalyChartHeight: 280px;
 .item {
     display: flex;
     align-items: center;
+    gap: 1rem;
 
     padding: 0.6rem 1.2rem;
     border-radius: 3px;
     cursor: pointer;
 
-    gap: 1rem;
+    transition: background-color 0.15s ease-out;
 
     .icon {
         width: 22px;
@@ -83,6 +84,10 @@ $anomalyChartHeight: 280px;
     }
 
     &.selected {
+        background-color: $primaryColor15;
+    }
+
+    &:hover {
         background-color: $primaryColor15;
     }
 }

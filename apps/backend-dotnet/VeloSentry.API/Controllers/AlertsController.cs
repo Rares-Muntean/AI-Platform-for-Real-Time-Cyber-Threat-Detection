@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VeloSentry.API.Database;
 using VeloSentry.API.Database.Models;
@@ -17,7 +16,6 @@ namespace VeloSentry.API.Controllers
         }
 
         [HttpGet("all")]
-        [Authorize]
         public async Task<IActionResult> GetAlerts()
         {
             List<ThreatAlert> alerts = await _db.ThreatAlerts.OrderByDescending(a => a.TimeStamp).Take(100).ToListAsync();
@@ -26,7 +24,6 @@ namespace VeloSentry.API.Controllers
         }
 
         [HttpGet("last")]
-        [Authorize]
         public async Task<IActionResult> GetLastAlert()
         {
             ThreatAlert? lastAlert = await _db.ThreatAlerts.OrderByDescending(a => a.TimeStamp).FirstOrDefaultAsync();
@@ -36,7 +33,6 @@ namespace VeloSentry.API.Controllers
         }
 
         [HttpPost("add")]
-        [Authorize]
         public async Task<IActionResult> AddAlert([FromBody] ThreatAlert alert)
         {
             if (alert == null) return BadRequest();

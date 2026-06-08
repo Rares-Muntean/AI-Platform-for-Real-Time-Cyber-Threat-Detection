@@ -24,13 +24,17 @@ namespace VeloSentry.API.Services
             };
 
             string secretKey = _configuration["JWT:SecretKey"]!;
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
-            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+            var securityKey = new
+                    SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+            var credentials = new SigningCredentials(securityKey,
+                SecurityAlgorithms.HmacSha256);
 
             var tokenDecriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.AddMinutes(_configuration.GetValue<int>("JWT:ExpireMinutes")),
+                Expires = DateTime
+                .UtcNow
+                .AddMinutes(_configuration.GetValue<int>("JWT:ExpireMinutes")),
                 SigningCredentials = credentials,
                 Issuer = _configuration["JWT:Issuer"],
                 Audience = _configuration["JWT:Audience"]
