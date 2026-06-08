@@ -20,7 +20,8 @@ namespace VeloSentry.API.Services
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim("FirstName", user.FirstName)
+                new Claim("FirstName", user.FirstName),
+                new Claim("LastName", user.LastName)
             };
 
             string secretKey = _configuration["JWT:SecretKey"]!;

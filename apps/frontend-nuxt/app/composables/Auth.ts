@@ -1,4 +1,4 @@
-import type { LoginDTO, User } from "~/types/types";
+import type { LoginDTO, User, UserDTO } from "~/types/types";
 
 export const useAuth = () => {
     const config = useRuntimeConfig();
@@ -9,21 +9,26 @@ export const useAuth = () => {
         () => false,
     );
 
+    const user = useState<UserDTO | null>("auth_user", () => null);
+
     const checkSession = async () => {
         const reqHeaders = useRequestHeaders(["cookie"]);
 
         try {
-            const res = await $fetch<{ valid: boolean }>(
+            const res = await $fetch<{ valid: boolean; user?: UserDTO }>(
                 `${baseUrl}/api/users/verifyToken`,
                 {
                     headers: reqHeaders,
                     credentials: "include",
                 },
             );
+
             isAuthenticated.value = res.valid;
+            user.value = res.user || null;
         } catch (e) {
             console.error("Check Session Failed: ", e);
             isAuthenticated.value = false;
+            user.value = null;
         }
     };
 
@@ -34,7 +39,7 @@ export const useAuth = () => {
             credentials: "include",
         });
 
-        isAuthenticated.value = true;
+        await checkSession();
     };
 
     const register = async (user: User) => {
@@ -44,7 +49,7 @@ export const useAuth = () => {
             credentials: "include",
         });
 
-        isAuthenticated.value = true;
+        await checkSession();
     };
 
     const logout = async () => {
@@ -57,11 +62,13 @@ export const useAuth = () => {
             console.error("Logout request failed: ", e);
         } finally {
             isAuthenticated.value = false;
+            user.value = null;
             await navigateTo("/login");
         }
     };
 
     return {
+        user,
         isAuthenticated,
         checkSession,
         register,

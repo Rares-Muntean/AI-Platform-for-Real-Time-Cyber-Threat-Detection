@@ -1,7 +1,8 @@
 <script lang="ts" setup>
 import type { NavGroup } from "~/types/types";
+const { user } = useAuth();
 
-const navigationGroups: NavGroup[] = [
+const navigationGroups = computed<NavGroup[]>(() => [
     {
         title: "MONITORING",
         items: [
@@ -36,7 +37,9 @@ const navigationGroups: NavGroup[] = [
         title: "ACCOUNT",
         items: [
             {
-                name: "Ion Popescu",
+                name:
+                    `${user.value?.firstName} ${user.value?.lastName}` ||
+                    "Profile",
                 icon: "material-symbols:account-circle",
                 to: "/profile",
             },
@@ -47,7 +50,7 @@ const navigationGroups: NavGroup[] = [
             },
         ],
     },
-];
+]);
 </script>
 
 <template>

@@ -51,7 +51,10 @@ namespace VeloSentry.API.Controllers
         [HttpGet("verifyToken")]
         public IActionResult VerifyToken()
         {
-            return Ok(new { valid = true });
+            string? firstName = User.FindFirst("FirstName")?.Value;
+            string? lastName = User.FindFirst("LastName")?.Value;
+
+            return Ok(new { valid = true, user = new UserDto { FirstName = firstName, LastName = lastName } });
         }
 
         private void SetJwtCookie(string token)
