@@ -24,6 +24,10 @@ export default defineNuxtConfig({
             name: "page",
             mode: "out-in",
         },
+        layoutTransition: {
+            name: "page",
+            mode: "out-in",
+        },
     },
 
     components: [

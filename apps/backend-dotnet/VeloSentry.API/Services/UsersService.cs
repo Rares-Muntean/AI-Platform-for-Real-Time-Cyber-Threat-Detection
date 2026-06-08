@@ -17,12 +17,14 @@ namespace VeloSentry.API.Services
             _db = db;
         }
 
-        public async Task RegisterUser(User user)
+        public async Task<string?> RegisterUser(User user)
         {
             user.Password = _passwordService.HashPassword(user.Password);
 
             _db.Users.Add(user);
             await _db.SaveChangesAsync();
+
+            return _tokenService.CreateToken(user);
         }
 
         public async Task<string?> LoginUser(LoginDto loginDto)

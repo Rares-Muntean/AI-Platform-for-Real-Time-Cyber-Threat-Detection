@@ -18,14 +18,14 @@ namespace VeloSentry.API.Controllers
         [HttpPost("create")]
         public async Task<IActionResult> CreateAccount([FromBody] User user)
         {
-            await _userService.RegisterUser(user);
-            return Ok(new { message = "Account created (pass tokens later)" });
+            string? token = await _userService.RegisterUser(user);
+            return Ok(new { token });
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
-            var token = await _userService.LoginUser(loginDto);
+            string? token = await _userService.LoginUser(loginDto);
             if (token == null) return Unauthorized(new { message = "Invalid credentials" });
 
             return Ok(new { token });

@@ -22,6 +22,8 @@
 
     background-color: #202020;
     box-shadow: 4px 8px 12px rgba($color: #000000, $alpha: 0.15);
+
+    z-index: 1;
 }
 
 .title-card {

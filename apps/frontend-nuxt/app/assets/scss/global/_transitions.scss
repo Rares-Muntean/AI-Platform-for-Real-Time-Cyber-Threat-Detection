@@ -1,13 +1,9 @@
-/* A smooth fade + slight shift transition */
 .page-enter-active,
 .page-leave-active {
     transition: all 0.2s cubic-bezier(0.79, 0.14, 0.15, 0.86);
 }
 
-.page-enter-from {
-    opacity: 0;
-}
-
+.page-enter-from,
 .page-leave-to {
     opacity: 0;
 }

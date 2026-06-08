@@ -16,6 +16,15 @@ export interface User {
     password: string;
 }
 
+export interface LoginDTO {
+    email: string;
+    password: string;
+}
+
+export interface TokenResponse {
+    token: string;
+}
+
 // DASHBOARD TYPES
 export interface NavItem {
     name: string;

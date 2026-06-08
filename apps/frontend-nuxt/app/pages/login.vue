@@ -3,5 +3,5 @@ definePageMeta({ layout: "auth" });
 </script>
 
 <template>
-    <AuthForm :is-login="false" />
+    <AuthForm :is-login="true" />
 </template>

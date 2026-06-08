@@ -2,7 +2,8 @@ $primaryBackgroundColor: #1a1a1a;
 
 $primaryColor: #47bcf6;
 $primaryColor15: rgb(71, 188, 246, 0.15);
-$primaryColor70: rgb(71, 188, 246, 0.7);
+$primaryColorDark25: #0b9be3;
+$primaryColorDark40: #097cb5;
 
 $greenColor: #22c55e;
 
@@ -15,3 +16,5 @@ $redColor: #dc2626;
 $defaultFontSize: 1.6rem;
 $bigFontSize: 3.8rem;
 $defaultBorderRadius: 3px;
+
+$defaultBasicElTransition: 0.15s ease-out;

@@ -47,13 +47,6 @@ onMounted(() => {
 onUnmounted(() => {
     clearInterval(interval);
 });
-
-watch(
-    () => alerts.value,
-    (newVal) => {
-        console.log("Data retrieved: ", newVal);
-    },
-);
 </script>
 
 <template>

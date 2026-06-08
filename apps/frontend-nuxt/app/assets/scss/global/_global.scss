@@ -30,6 +30,22 @@ body {
     font-size: $defaultFontSize;
     letter-spacing: -0.2px;
 
+    transition:
+        background-color $defaultBasicElTransition,
+        transform $defaultBasicElTransition;
+
+    &:hover {
+        background-color: $primaryColorDark25;
+    }
+
+    &:active {
+        transition:
+            background-color 0.1s ease-out,
+            transform 0.1s ease-out;
+        transform: scale(0.99);
+        background-color: $primaryColorDark40;
+    }
+
     &.stretched {
         width: 100%;
     }
