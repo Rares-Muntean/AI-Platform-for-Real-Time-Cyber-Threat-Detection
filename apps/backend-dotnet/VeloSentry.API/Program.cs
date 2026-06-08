@@ -22,7 +22,8 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: allowAllPolicy,
         policy =>
         {
-            policy.AllowAnyOrigin()
+            policy.WithOrigins("http://localhost:3000")
+                  .AllowCredentials()
                   .AllowAnyHeader()
                   .AllowAnyMethod();
         });
@@ -42,6 +43,19 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = builder.Configuration["JWT:Audience"],
             ClockSkew = TimeSpan.Zero,
         };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var token = context.Request.Cookies["jwt"];
+                if (!string.IsNullOrEmpty(token))
+                {
+                    context.Token = token;
+                }
+                return Task.CompletedTask;
+            }
+        };
     });
 
 
@@ -56,10 +70,11 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors(allowAllPolicy);
-
 app.UseHttpsRedirection();
-app.MapControllers();
+
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapControllers();
 
 app.Run("http://0.0.0.0:5284");

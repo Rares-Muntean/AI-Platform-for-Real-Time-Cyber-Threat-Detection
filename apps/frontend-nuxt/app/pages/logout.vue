@@ -1,21 +1,16 @@
 <script lang="ts" setup>
-definePageMeta({ layout: false });
+definePageMeta({ layout: false, middleware: "auth" });
+
+const { logout } = useAuth();
 
 onMounted(async () => {
+    await logout();
     await navigateTo("/signUp");
 });
 </script>
 
 <template>
-    <div class="logout-spinner">
-        <!-- <Icon name="line-md:loading-twotone-loop" size="24" />
-        <p>Logging you out, please wait...</p> -->
-    </div>
+    <div></div>
 </template>
 
-<style lang="scss" scoped>
-.logout-spinner {
-    display: flex;
-    gap: 1rem;
-}
-</style>
+<style lang="scss" scoped></style>

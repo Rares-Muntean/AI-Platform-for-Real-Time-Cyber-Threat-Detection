@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using VeloSentry.API.Database.Models;
 using VeloSentry.API.Services;
 
@@ -9,17 +10,22 @@ namespace VeloSentry.API.Controllers
     public class UsersController : Controller
     {
         public readonly IUsersService _userService;
+        public readonly IConfiguration _config;
 
-        public UsersController(IUsersService userService)
+        public UsersController(IUsersService userService, IConfiguration config)
         {
             _userService = userService;
+            _config = config;
         }
 
         [HttpPost("create")]
         public async Task<IActionResult> CreateAccount([FromBody] User user)
         {
             string? token = await _userService.RegisterUser(user);
-            return Ok(new { token });
+            if (token == null) return Unauthorized(new { message = "Register Unsuccesful" });
+
+            SetJwtCookie(token);
+            return Ok(new { message = "User registered successfully" });
         }
 
         [HttpPost("login")]
@@ -28,7 +34,35 @@ namespace VeloSentry.API.Controllers
             string? token = await _userService.LoginUser(loginDto);
             if (token == null) return Unauthorized(new { message = "Invalid credentials" });
 
-            return Ok(new { token });
+            SetJwtCookie(token);
+            return Ok(new { message = "Login successful" });
+        }
+
+        [Authorize]
+        [HttpPost("logout")]
+        public IActionResult LogoutAdmin()
+        {
+            Response.Cookies.Delete("jwt");
+
+            return Ok(new { success = true });
+        }
+
+        [Authorize]
+        [HttpGet("verifyToken")]
+        public IActionResult VerifyToken()
+        {
+            return Ok(new { valid = true });
+        }
+
+        private void SetJwtCookie(string token)
+        {
+            Response.Cookies.Append("jwt", token, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = false,
+                SameSite = SameSiteMode.Lax,
+                Expires = DateTime.UtcNow.AddMinutes(_config.GetValue<int>("JWT:ExpireMinutes"))
+            });
         }
     }
 }

@@ -6,7 +6,7 @@ const props = defineProps<{
     isLogin: boolean;
 }>();
 
-const { createAccount, loginUser } = useUsers();
+const { register, login } = useAuth();
 
 const form: User = reactive({
     firstName: "",
@@ -31,12 +31,10 @@ const handleSubmit = async () => {
 
     if (props.isLogin) {
         try {
-            const response = await loginUser({
+            const response = await login({
                 email: form.email,
                 password: form.password,
             });
-            // Handle token storage (cookie)
-            console.log("Login Token:", response.token);
 
             await navigateTo("/dashboard");
         } catch (e) {
@@ -52,18 +50,17 @@ const handleSubmit = async () => {
         }
 
         try {
-            await createAccount({
+            await register({
                 firstName: form.firstName,
                 lastName: form.lastName,
                 email: form.email,
                 password: form.password,
             });
 
-            const loginResponse = await loginUser({
+            const loginResponse = await login({
                 email: form.email,
                 password: form.password,
             });
-            console.log("Auto-login Token:", loginResponse.token);
 
             await navigateTo("/dashboard");
         } catch (e: any) {

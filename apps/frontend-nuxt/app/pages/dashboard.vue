@@ -1,6 +1,8 @@
-<!-- pages/dashboard.vue -->
 <script lang="ts" setup>
 import type { ThreatAlert } from "~/types/types";
+definePageMeta({
+    middleware: "auth",
+});
 
 const { getHistory, getLast } = useAlerts();
 const { data: alerts, refresh, pending } = await getLast();

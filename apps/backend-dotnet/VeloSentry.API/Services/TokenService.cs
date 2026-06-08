@@ -35,6 +35,7 @@ namespace VeloSentry.API.Services
                 Expires = DateTime
                 .UtcNow
                 .AddMinutes(_configuration.GetValue<int>("JWT:ExpireMinutes")),
+
                 SigningCredentials = credentials,
                 Issuer = _configuration["JWT:Issuer"],
                 Audience = _configuration["JWT:Audience"]

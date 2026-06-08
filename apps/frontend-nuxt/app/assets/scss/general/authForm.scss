@@ -216,16 +216,20 @@ form {
     }
 
     .password-input {
-        display: flex;
-        flex-direction: column;
+        position: relative;
+        padding-bottom: 20px;
 
-        gap: 0.8rem;
+        input {
+            width: 100%;
+        }
     }
 
     .validation-msg {
-        color: $redColor;
+        position: absolute;
+        bottom: 0;
+        left: 0;
         font-size: 1.2rem;
-        font-weight: 400;
+        color: $redColor;
     }
 }
 
