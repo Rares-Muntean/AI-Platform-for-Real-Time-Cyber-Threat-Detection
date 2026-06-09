@@ -7,6 +7,7 @@ const props = defineProps<{
 }>();
 
 const { register, login } = useAuth();
+const { theme } = useTheme();
 
 const form: User = reactive({
     firstName: "",
@@ -112,18 +113,21 @@ watch(
         <div class="signup-container">
             <div class="logo-wrapper">
                 <div class="logo-container">
-                    <img class="logo-icon" src="/images/logo-icon.png" />
+                    <img
+                        class="logo-icon"
+                        :src="`/images/logo-icon-${theme}.png`"
+                    />
                     <p class="icon-text">VELOX</p>
                 </div>
                 <Separator />
             </div>
 
             <div class="heading-wrapper">
-                <h1 class="title">
+                <p class="title">
                     {{
                         isLogin ? "Log in to your account" : "Create an account"
                     }}
-                </h1>
+                </p>
                 <p class="description">
                     {{
                         isLogin

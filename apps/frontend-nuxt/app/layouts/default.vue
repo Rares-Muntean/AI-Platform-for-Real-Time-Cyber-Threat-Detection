@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import type { NavGroup } from "~/types/types";
 const { user } = useAuth();
+const { theme } = useTheme();
 
 const navigationGroups = computed<NavGroup[]>(() => [
     {
@@ -74,7 +75,11 @@ const navigationGroups = computed<NavGroup[]>(() => [
         <div class="left-panel">
             <div class="logo-container">
                 <div class="logo-wrapper">
-                    <img class="logo-icon" src="/images/logo-icon.png" alt="" />
+                    <img
+                        class="logo-icon"
+                        :src="`/images/logo-icon-${theme}.png`"
+                        alt=""
+                    />
                     <p class="icon-text">VELOX</p>
                 </div>
                 <Separator />

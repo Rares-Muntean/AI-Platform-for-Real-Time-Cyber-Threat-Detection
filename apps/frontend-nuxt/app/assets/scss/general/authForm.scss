@@ -39,7 +39,6 @@
 
     .icon-text {
         font-size: 1.8rem;
-        font-weight: 500;
     }
 }
 
@@ -50,13 +49,13 @@
     gap: 0.8rem;
 
     .title {
-        font-weight: 400;
         font-size: $bigFontSize;
     }
 
     .description {
-        color: $whiteText70;
+        color: $whiteTextDark30;
         font-size: $defaultFontSize;
+        font-weight: $fontWeightSmall;
 
         margin-bottom: 4.8rem;
     }
@@ -67,12 +66,11 @@ form {
         border-style: none;
         border-radius: $defaultBorderRadius;
 
-        background-color: rgba(56, 56, 56, 0.7);
-        box-shadow: inset 0 4px 4px rgba($color: #000000, $alpha: 0.2);
+        background-color: $backgroundColorLight;
+        box-shadow: inset 0 4px 4px rgba($color: #000000, $alpha: 0.1);
         padding: 1rem 1.4rem;
 
         font-family: inherit;
-        font-weight: 400;
         color: $whiteTextColor;
     }
 
@@ -82,126 +80,6 @@ form {
 
         gap: 1.8rem;
         margin-bottom: 3.8rem;
-    }
-    .section {
-        position: relative;
-        min-height: 100dvh;
-        width: 100%;
-
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 2rem;
-
-        overflow: hidden;
-    }
-
-    .signup-container {
-        width: 100%;
-        max-width: 415px;
-
-        margin-left: 30rem;
-        margin-bottom: 5rem;
-    }
-
-    .logo-wrapper {
-        display: flex;
-        flex-direction: column;
-
-        gap: 1.6rem;
-        margin-bottom: 2.6rem;
-
-        .logo-container {
-            display: flex;
-            align-items: center;
-
-            gap: 1rem;
-        }
-
-        .logo-icon {
-            width: 3.8rem;
-        }
-
-        .icon-text {
-            font-size: 1.8rem;
-            font-weight: 500;
-        }
-    }
-
-    .heading-wrapper {
-        display: flex;
-        flex-direction: column;
-
-        gap: 0.8rem;
-
-        .title {
-            font-weight: 400;
-            font-size: $bigFontSize;
-        }
-
-        .description {
-            color: $whiteText70;
-            font-size: $defaultFontSize;
-
-            margin-bottom: 4.8rem;
-        }
-    }
-
-    form {
-        input {
-            border-style: none;
-            border-radius: $defaultBorderRadius;
-
-            background-color: rgba(56, 56, 56, 0.7);
-            box-shadow: inset 0 4px 4px rgba($color: #000000, $alpha: 0.2);
-            padding: 1rem 1.4rem;
-
-            font-family: inherit;
-            font-weight: 400;
-            color: $whiteTextColor;
-        }
-
-        .input-wrapper {
-            display: flex;
-            flex-direction: column;
-
-            gap: 1.8rem;
-            margin-bottom: 3.8rem;
-        }
-
-        .full-name {
-            display: flex;
-            justify-content: space-between;
-
-            gap: 1.8rem;
-        }
-
-        .btn-signup {
-            margin-bottom: 5rem;
-        }
-
-        .password-input {
-            display: flex;
-            flex-direction: column;
-
-            gap: 0.8rem;
-        }
-
-        .validation-msg {
-            color: $redColor;
-            font-size: 1.2rem;
-            font-weight: 400;
-        }
-    }
-
-    .login-redirect {
-        color: $whiteText70;
-        font-size: $defaultFontSize;
-
-        a {
-            text-decoration: underline;
-            color: inherit;
-        }
     }
 
     .full-name {
@@ -216,6 +94,10 @@ form {
     }
 
     .password-input {
+        display: flex;
+        flex-direction: column;
+
+        gap: 0.8rem;
         position: relative;
         padding-bottom: 20px;
 
@@ -228,14 +110,16 @@ form {
         position: absolute;
         bottom: 0;
         left: 0;
+
         font-size: 1.2rem;
         color: $redColor;
     }
 }
 
 .login-redirect {
-    color: $whiteText70;
+    color: $whiteTextDark30;
     font-size: $defaultFontSize;
+    font-weight: $fontWeightSmall;
 
     a {
         text-decoration: underline;

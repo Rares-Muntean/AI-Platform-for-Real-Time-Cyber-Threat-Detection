@@ -28,6 +28,15 @@ export default defineNuxtConfig({
             name: "page",
             mode: "out-in",
         },
+        head: {
+            script: [
+                {
+                    src: "/theme.js",
+                    type: "text/javascript",
+                    tagPosition: "head",
+                },
+            ],
+        },
     },
 
     components: [

@@ -1,16 +1,50 @@
-$primaryBackgroundColor: #1a1a1a;
+:root {
+    --background-color: #1a1a1a;
+    --background-color-light: #2f2f2f;
+    --white-color: #efefef;
+    --white-color-dark-30: #a7a7a7;
+    --white-color-dark-75: #3c3c3c;
 
-$primaryColor: #47bcf6;
-$primaryColor15: rgb(71, 188, 246, 0.15);
-$primaryColorDark25: #0b9be3;
-$primaryColorDark40: #097cb5;
+    --primary-color: #47bcf6;
+    --primary-color-15: rgba(71, 188, 246, 0.15);
+    --primary-color-dark-20: #0ca6f2;
+    --primary-color-dark-40: #097cb5;
+
+    --font-weight-medium: 500;
+    --font-weight-small: 400;
+}
+
+[data-theme="light"] {
+    --background-color: #f4f4f5;
+    --background-color-light: #e7e7e9;
+    --white-color: #222;
+    --white-color-dark-30: #8e8e8e;
+    --white-color-dark-75: #d1d1d4;
+
+    --primary-color: #0b9be3;
+    --primary-color-15: rgba(11, 155, 227, 0.15);
+    --primary-color-dark-20: #097cb5;
+    --primary-color-dark-40: #075f8a;
+
+    --font-weight-medium: 600;
+    --font-weight-small: 500;
+}
+
+$primaryBackgroundColor: var(--background-color);
+$backgroundColorLight: var(--background-color-light);
+$whiteTextColor: var(--white-color);
+$whiteTextDark30: var(--white-color-dark-30);
+$whiteTextDark75: var(--white-color-dark-75);
+
+$primaryColor: var(--primary-color);
+$primaryColor15: var(--primary-color-15);
+$primaryColorDark20: var(--primary-color-dark-20);
+$primaryColorDark40: var(--primary-color-dark-40);
+
+$fontWeightMedium: var(--font-weight-medium);
+$fontWeightSmall: var(--font-weight-small);
 
 $greenColor: #22c55e;
-
-$whiteTextColor: #efefef;
-$whiteText20: rgb(239, 239, 239, 0.2);
-$whiteText70: rgba($whiteTextColor, 0.7);
-
 $redColor: #dc2626;
 
 $defaultFontSize: 1.6rem;

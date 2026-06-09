@@ -1,0 +1,36 @@
+.settings-section {
+    display: flex;
+    flex-direction: column;
+
+    height: 100%;
+
+    gap: 2.6rem;
+}
+
+.setting {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.setting-separator {
+    height: 2px;
+    width: 100%;
+    background-color: $backgroundColorLight;
+}
+
+.setting-title {
+    font-size: 1.8rem;
+}
+
+.settings-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.setting-description {
+    font-size: 1.4rem;
+    color: $whiteTextDark30;
+    font-weight: $fontWeightSmall;
+}

@@ -6,6 +6,10 @@
 
 html {
     font-size: 62.5%;
+    font-weight: $fontWeightMedium;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
 }
 
 html,
@@ -15,7 +19,25 @@ body {
     font-family: "SpaceGrotesk";
 }
 
+.section {
+    display: flex;
+    flex-direction: column;
+    gap: 3.2rem;
+
+    height: 100dvh;
+}
+
+.panel-title {
+    font-size: 2.8rem;
+    font-weight: $fontWeightMedium;
+}
+
 .btn-primary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+
     cursor: pointer;
     border-style: none;
     border-radius: 3px;
@@ -26,7 +48,7 @@ body {
     padding: 8px 18px;
 
     font-family: inherit;
-    font-weight: 500;
+    font-weight: 700;
     font-size: $defaultFontSize;
     letter-spacing: -0.2px;
 
@@ -35,19 +57,22 @@ body {
         transform $defaultBasicElTransition;
 
     &:hover {
-        background-color: $primaryColorDark25;
+        background-color: $primaryColorDark20;
     }
 
     &:active {
         transition:
             background-color 0.1s ease-out,
             transform 0.1s ease-out;
-        transform: scale(0.99);
         background-color: $primaryColorDark40;
     }
 
     &.stretched {
         width: 100%;
+    }
+
+    &.ui-size {
+        font-size: 1.4rem;
     }
 }
 

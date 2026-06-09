@@ -52,8 +52,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div>
-        <h2 class="panel-title">Dashboard</h2>
+    <div class="section">
+        <p class="panel-title">Dashboard</p>
         <section class="dashboard-section">
             <DashboardCard class="anomaly-history">
                 <template #title-card>
