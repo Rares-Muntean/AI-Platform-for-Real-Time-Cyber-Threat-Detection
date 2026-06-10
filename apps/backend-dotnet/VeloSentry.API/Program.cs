@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using VeloSentry.API.Database;
+using VeloSentry.API.Hubs;
 using VeloSentry.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -59,7 +60,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-
+builder.Services.AddSignalR();
 
 var app = builder.Build();
 
@@ -78,4 +79,5 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+app.MapHub<VeloxHub>("/hubs/velox");
 app.Run("http://0.0.0.0:5284");

@@ -1,13 +1,14 @@
 <script lang="ts" setup>
+import { useSignalR } from "~/composables/SignalR";
 import type { ThreatAlert } from "~/types/types";
 definePageMeta({
     middleware: "auth",
 });
 
 const { getHistory, getLast } = useAlerts();
-const { data: alerts, refresh, pending } = await getLast();
+const { startConnection, onRecieveAlert, stopConnection } = useSignalR();
+const { data: alert, refresh, pending } = await getLast();
 
-let interval: any;
 const yAxisLabels = [70, 60, 50, 40, 30, 20, 10, 0];
 
 interface DisplayField {
@@ -41,13 +42,16 @@ function formatTimeStamp(val: string) {
 }
 
 onMounted(() => {
-    interval = setInterval(() => {
-        refresh();
-    }, 3000);
+    startConnection();
+
+    onRecieveAlert((newAlert) => {
+        console.log("New threat alert received via WebSocket: ", newAlert);
+        alert.value = newAlert;
+    });
 });
 
-onUnmounted(() => {
-    clearInterval(interval);
+onBeforeUnmount(() => {
+    stopConnection();
 });
 </script>
 
@@ -86,14 +90,14 @@ onUnmounted(() => {
                 <template #title-card>
                     <div class="top-card">
                         <p>LAST ALERT</p>
-                        <p v-if="alerts">
-                            {{ formatTimeStamp(alerts?.timeStamp) }}
+                        <p v-if="alert">
+                            {{ formatTimeStamp(alert?.timeStamp) }}
                         </p>
                     </div>
                 </template>
 
                 <template #content>
-                    <div v-if="alerts" class="alert-info">
+                    <div v-if="alert" class="alert-info">
                         <div
                             v-for="field in displayFields"
                             :key="field.key"
@@ -103,8 +107,8 @@ onUnmounted(() => {
                             <p>
                                 {{
                                     field.format
-                                        ? field.format(alerts[field.key])
-                                        : alerts[field.key]
+                                        ? field.format(alert[field.key])
+                                        : alert[field.key]
                                 }}
                             </p>
                         </div>

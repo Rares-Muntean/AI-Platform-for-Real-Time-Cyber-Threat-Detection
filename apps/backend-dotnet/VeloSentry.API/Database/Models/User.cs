@@ -9,5 +9,7 @@
         public string Password { get; set; } = string.Empty;
 
         public ICollection<ThreatAlert> ThreatAlerts { get; set; } = new List<ThreatAlert>();
+        public ICollection<MonitoredDevice> MonitoredDevices { get; set; } = new List<MonitoredDevice>();
+
     }
 }

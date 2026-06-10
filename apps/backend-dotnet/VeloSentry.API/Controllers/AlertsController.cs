@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using VeloSentry.API.Database;
 using VeloSentry.API.Database.Models;
+using VeloSentry.API.Hubs;
 
 namespace VeloSentry.API.Controllers
 {
@@ -10,9 +12,12 @@ namespace VeloSentry.API.Controllers
     public class AlertsController : Controller
     {
         private readonly AppDbContext _db;
-        public AlertsController(AppDbContext db)
+        private readonly IHubContext<VeloxHub> _hubContext;
+
+        public AlertsController(AppDbContext db, IHubContext<VeloxHub> hubContext)
         {
             _db = db;
+            _hubContext = hubContext;
         }
 
         [HttpGet("all")]
@@ -37,13 +42,17 @@ namespace VeloSentry.API.Controllers
         {
             if (alert == null) return BadRequest();
 
+            var device = await _db.MonitoredDevices.FirstOrDefaultAsync(d => d.IpAddress == alert.DestinationIp);
+            if (device == null)
+            {
+                return NotFound(new { message = $"No monitored device registered with IP {alert.DestinationIp}" });
+            }
+
+            alert.UserId = device.UserId;
             _db.ThreatAlerts.Add(alert);
             await _db.SaveChangesAsync();
 
-            Console.WriteLine($"\n\nALERT saved with this IP: {alert.SourceIp}");
-            Console.WriteLine($"Target IP: {alert.DestinationIp} |  Port: {alert.DestinationPort} | ANOMALY SCORE: {alert.AnomalyScore}");
-            Console.WriteLine($"Protocol: {alert.Protocol}, Total Packets: {alert.TotalPackets}");
-            Console.WriteLine($"Time Stamp: {alert.TimeStamp}");
+            await _hubContext.Clients.All.SendAsync("RecieveAlert", alert);
 
             return Ok(new { message = "Alert received successfully.", id = alert.Id });
         }

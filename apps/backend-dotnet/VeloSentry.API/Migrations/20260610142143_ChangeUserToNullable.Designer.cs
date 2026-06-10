@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using VeloSentry.API.Database;
@@ -11,9 +12,11 @@ using VeloSentry.API.Database;
 namespace VeloSentry.API.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260610142143_ChangeUserToNullable")]
+    partial class ChangeUserToNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -53,12 +56,7 @@ namespace VeloSentry.API.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("MonitoredDevices");
                 });
@@ -133,17 +131,6 @@ namespace VeloSentry.API.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("VeloSentry.API.Database.Models.MonitoredDevice", b =>
-                {
-                    b.HasOne("VeloSentry.API.Database.Models.User", "User")
-                        .WithMany("MonitoredDevices")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("VeloSentry.API.Database.Models.ThreatAlert", b =>
                 {
                     b.HasOne("VeloSentry.API.Database.Models.User", "User")
@@ -157,8 +144,6 @@ namespace VeloSentry.API.Migrations
 
             modelBuilder.Entity("VeloSentry.API.Database.Models.User", b =>
                 {
-                    b.Navigation("MonitoredDevices");
-
                     b.Navigation("ThreatAlerts");
                 });
 #pragma warning restore 612, 618

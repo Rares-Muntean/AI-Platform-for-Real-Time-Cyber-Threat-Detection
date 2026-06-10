@@ -9,5 +9,8 @@
         public string SshPassword { get; set; } = string.Empty;
         public string Status { get; set; } = "Offline";
         public DateTime LastHeartbeat { get; set; }
+
+        public int UserId { get; set; }
+        public User? User { get; set; }
     }
 }

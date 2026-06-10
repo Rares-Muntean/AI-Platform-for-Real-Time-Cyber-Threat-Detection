@@ -1,14 +1,18 @@
 <script lang="ts" setup>
 import type { MonitoredDevice } from "~/types/types";
 
+const { registerDevice, getDevices, deleteDevice } = useDevices();
+const { startConnection, onDeviceStatusChanged, stopConnection } = useSignalR();
+
 const isModalOpened = ref(false);
-const { registerDevice } = useDevices();
+const devices = ref<MonitoredDevice[]>([]);
 
 const toggleModal = () => {
     isModalOpened.value = !isModalOpened.value;
 };
 
 const form: MonitoredDevice = reactive({
+    id: 0,
     name: "",
     ipAddress: "",
     sshUsername: "",
@@ -17,9 +21,18 @@ const form: MonitoredDevice = reactive({
     lastHeartbeat: new Date(),
 });
 
+const loadDevices = async () => {
+    try {
+        devices.value = await getDevices();
+    } catch (e) {
+        console.error("Failed to fetch devices: ", e);
+    }
+};
+
 const handleSubmit = async () => {
     try {
-        await registerDevice({
+        const newDevice = await registerDevice({
+            id: form.id,
             name: form.name,
             ipAddress: form.ipAddress,
             sshUsername: form.sshUsername,
@@ -28,15 +41,35 @@ const handleSubmit = async () => {
             lastHeartbeat: form.lastHeartbeat,
         });
 
+        devices.value.push(newDevice);
+
         form.name = "";
         form.ipAddress = "";
         form.sshUsername = "";
         form.sshPassword = "";
+
         toggleModal();
     } catch (e) {
         console.error("Failed to register device: ", e);
     }
 };
+
+const handleDelete = async (id: number) => {
+    await deleteDevice(id);
+    await loadDevices();
+};
+
+onMounted(async () => {
+    await loadDevices();
+    startConnection();
+
+    onDeviceStatusChanged((data) => {
+        const device = devices.value.find((d) => d.id === data.id);
+        if (device) {
+            device.status = data.status;
+        }
+    });
+});
 </script>
 
 <template>
@@ -55,15 +88,22 @@ const handleSubmit = async () => {
             <Separator class="primary" />
 
             <div class="device-list">
-                <div class="device-card">
+                <div
+                    v-for="device in devices"
+                    :key="device.id"
+                    class="device-card"
+                >
                     <div class="left-info">
-                        <p class="name">Linux VM</p>
-                        <p class="ip">192.168.1.148</p>
+                        <p class="name">{{ device.name }}</p>
+                        <p class="ip">{{ device.ipAddress }}</p>
                     </div>
 
                     <div class="right-status">
-                        <p class="status">Active</p>
+                        <p :class="['status', device.status?.toLowerCase()]">
+                            {{ device.status }}
+                        </p>
                         <Icon
+                            @click="handleDelete(device.id)"
                             class="delete-icon"
                             name="material-symbols:delete"
                         />

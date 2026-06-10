@@ -31,6 +31,7 @@ export interface TokenResponse {
 }
 
 export interface MonitoredDevice {
+    id: number;
     name: string;
     ipAddress: string;
     sshUsername: string;
