@@ -11,5 +11,6 @@ namespace VeloSentry.API.Database
 
         public DbSet<ThreatAlert> ThreatAlerts { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<MonitoredDevice> MonitoredDevices { get; set; }
     }
 }

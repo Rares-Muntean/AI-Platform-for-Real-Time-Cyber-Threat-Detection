@@ -15,13 +15,12 @@
     flex-direction: column;
     gap: 2rem;
 
-    border-radius: 4px;
-    border: solid 2px $whiteTextDark75;
+    border-radius: $defaultBorderRadius;
 
     padding: 2.6rem 2.2rem;
 
-    background-color: $primaryBackgroundColor;
-    box-shadow: 4px 8px 12px rgba($color: #000000, $alpha: 0.1);
+    background-color: $backgroundColorLighter;
+    box-shadow: $boxShadowDefault;
 
     z-index: 1;
 }

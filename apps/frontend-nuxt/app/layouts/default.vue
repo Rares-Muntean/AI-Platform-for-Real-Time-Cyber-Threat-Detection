@@ -28,6 +28,11 @@ const navigationGroups = computed<NavGroup[]>(() => [
         title: "SYSTEM",
         items: [
             {
+                name: "Devices",
+                icon: "material-symbols:computer-sound",
+                to: "/devices",
+            },
+            {
                 name: "Settings",
                 icon: "material-symbols:settings-rounded",
                 to: "/settings",

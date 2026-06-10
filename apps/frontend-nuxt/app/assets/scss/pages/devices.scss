@@ -1,0 +1,106 @@
+.content {
+    display: flex;
+    flex-direction: column;
+
+    gap: 0.8rem;
+}
+
+.devices-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.devices-title {
+    font-size: 2rem;
+}
+
+.btn {
+    width: fit-content;
+}
+
+.device-list {
+    padding-top: 0.8rem;
+}
+
+// Device card
+.device-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    border-radius: $defaultBorderRadius;
+    width: 100%;
+
+    background-color: $backgroundColorLighter;
+    box-shadow: $boxShadowDefault;
+    padding: 8px 16px;
+}
+
+.left-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+
+    .name {
+        font-size: 1.8rem;
+    }
+
+    .ip {
+        font-size: 1.4rem;
+        color: $whiteTextDark30;
+        font-weight: $fontWeightSmall;
+    }
+}
+
+.right-status {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+
+    color: $whiteTextDark30;
+}
+
+.device-list {
+    padding-left: 16px;
+    padding-right: 16px;
+
+    display: grid;
+    grid-template-columns: repeat(
+        auto-fit,
+        minmax(max(300px, calc(50% - 0.8rem)), 1fr)
+    );
+    gap: 1.6rem;
+}
+
+.delete-icon {
+    cursor: pointer;
+    transition: background-color $defaultBasicElTransition;
+}
+
+.status {
+    background-color: $greenColor;
+    padding: 4px 12px;
+    border-radius: 3px;
+
+    font-size: 1.2rem;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: $primaryBackgroundColor;
+}
+
+.input-wrapper {
+    display: flex;
+    flex-direction: column;
+
+    gap: 1.6rem;
+}
+
+.action-btns {
+    display: flex;
+    align-items: center;
+    justify-content: end;
+    gap: 0.8rem;
+    width: 100%;
+    margin-top: 4rem;
+}

@@ -12,14 +12,16 @@ const { theme, toggleTheme } = useTheme();
         <section class="settings-section">
             <div class="setting">
                 <div class="settings-info">
-                    <p class="setting-title">Night Mode</p>
+                    <p class="setting-title">
+                        {{ theme === "dark" ? "Light" : "Dark" }} Mode
+                    </p>
                     <p class="setting-description">
                         Toggle between the light and dark interface themes.
                     </p>
                 </div>
 
                 <div class="setting-button-container">
-                    <button class="btn-primary ui-size" @click="toggleTheme">
+                    <button class="btn ui-size" @click="toggleTheme">
                         <Icon
                             :name="
                                 theme === 'dark'
@@ -34,7 +36,7 @@ const { theme, toggleTheme } = useTheme();
                 </div>
             </div>
 
-            <div class="setting-separator"></div>
+            <Separator class="primary" />
         </section>
     </div>
 </template>

@@ -13,5 +13,13 @@
         $primaryBackgroundColor
     );
     border-radius: 3px;
+
+    &.primary {
+        height: 2px;
+        width: 100%;
+        border-radius: 3px;
+        background: none;
+        background-color: $backgroundColorContrast;
+    }
 }
 </style>

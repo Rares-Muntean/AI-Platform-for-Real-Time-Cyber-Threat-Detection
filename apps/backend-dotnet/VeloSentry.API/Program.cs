@@ -13,6 +13,7 @@ var allowAllPolicy = "AllowAll";
 builder.Services.AddScoped<IPasswordService, PasswordService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IUsersService, UsersService>();
+builder.Services.AddScoped<IDeviceProvisioningService, DeviceProvisioningService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

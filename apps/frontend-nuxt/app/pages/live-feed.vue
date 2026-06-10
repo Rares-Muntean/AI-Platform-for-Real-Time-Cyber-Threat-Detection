@@ -5,7 +5,9 @@ definePageMeta({
 </script>
 
 <template>
-    <div></div>
+    <div class="section">
+        <p class="panel-title">Live Feed</p>
+    </div>
 </template>
 
 <style></style>

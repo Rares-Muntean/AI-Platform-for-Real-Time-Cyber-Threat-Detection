@@ -178,7 +178,7 @@ watch(
                     </div>
                 </div>
 
-                <button type="submit" class="btn-primary stretched btn-signup">
+                <button type="submit" class="btn stretched btn-signup">
                     {{ isLogin ? "Log in" : "Create account" }}
                 </button>
             </form>

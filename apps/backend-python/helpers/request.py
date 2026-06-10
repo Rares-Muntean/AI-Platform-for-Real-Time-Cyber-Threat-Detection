@@ -2,10 +2,26 @@ import datetime
 import time
 from datetime import datetime,timezone
 import requests
-
+import os
+import json
 
 ########## BACKEND CONFIG ##########
-API_BASE = "http://192.168.1.226:5284/api/alerts/add"
+dir_path = os.path.dirname(os.path.realpath(__file__))
+config_path = os.path.join(dir_path, "ip_config.txt")
+
+backend_ip = "192.168.1.226"
+
+if os.path.exists(config_path):
+    try:
+        with open(config_path, "r") as f:
+            backend_ip = f.read().strip()
+            print(f"[CONFIG] Loaded dynamic backend IP: {backend_ip}")
+    except Exception as e:
+        print(f"[CONFIG ERROR] Failed to read ip_config.txt: {e}")
+else:
+    print(f"[CONFIG] No ip_config.txt found. Using fallback IP: {backend_ip}")
+
+API_BASE = f"http://{backend_ip}:5284/api/alerts/add"
 COOLDOWN_SECONDS = 60
 ####################################
 

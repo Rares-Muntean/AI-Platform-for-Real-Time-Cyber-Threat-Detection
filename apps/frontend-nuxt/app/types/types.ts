@@ -30,6 +30,15 @@ export interface TokenResponse {
     token: string;
 }
 
+export interface MonitoredDevice {
+    name: string;
+    ipAddress: string;
+    sshUsername: string;
+    sshPassword: string;
+    status: string;
+    lastHeartbeat: Date;
+}
+
 // DASHBOARD TYPES
 export interface NavItem {
     name: string;

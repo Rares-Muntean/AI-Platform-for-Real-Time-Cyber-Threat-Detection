@@ -62,18 +62,6 @@
 }
 
 form {
-    input {
-        border-style: none;
-        border-radius: $defaultBorderRadius;
-
-        background-color: $backgroundColorLight;
-        box-shadow: inset 0 4px 4px rgba($color: #000000, $alpha: 0.1);
-        padding: 1rem 1.4rem;
-
-        font-family: inherit;
-        color: $whiteTextColor;
-    }
-
     .input-wrapper {
         display: flex;
         flex-direction: column;
@@ -100,10 +88,6 @@ form {
         gap: 0.8rem;
         position: relative;
         padding-bottom: 20px;
-
-        input {
-            width: 100%;
-        }
     }
 
     .validation-msg {

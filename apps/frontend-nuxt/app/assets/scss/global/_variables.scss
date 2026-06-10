@@ -1,6 +1,11 @@
 :root {
     --background-color: #1a1a1a;
-    --background-color-light: #2f2f2f;
+    --background-color-lighter: #212121;
+    --background-color-contrast: #2f2f2f;
+    --background-color-darker: #7f7f7f;
+    --background-color-darker20: #666666;
+    --background-color-darker40: #4c4c4c;
+
     --white-color: #efefef;
     --white-color-dark-30: #a7a7a7;
     --white-color-dark-75: #3c3c3c;
@@ -10,13 +15,24 @@
     --primary-color-dark-20: #0ca6f2;
     --primary-color-dark-40: #097cb5;
 
+    --green-color: #22c55e;
+    --red-color: #ef4444;
+    --yellow-color: #f59e0b;
+
     --font-weight-medium: 500;
     --font-weight-small: 400;
+
+    --box-shadow-default: 0px 2px 6px rgba(0, 0, 0, 0);
 }
 
 [data-theme="light"] {
     --background-color: #f4f4f5;
-    --background-color-light: #e7e7e9;
+    --background-color-contrast: #e7e7e9;
+    --background-color-lighter: #fbfbfb;
+    --background-color-darker: #b7b7bd;
+    --background-color-darker20: #909099;
+    --background-color-darker40: #6b6b74;
+
     --white-color: #222;
     --white-color-dark-30: #8e8e8e;
     --white-color-dark-75: #d1d1d4;
@@ -26,12 +42,23 @@
     --primary-color-dark-20: #097cb5;
     --primary-color-dark-40: #075f8a;
 
+    --green-color: #16a34a;
+    --red-color: #dc2626;
+    --yellow-color: #d97706;
+
     --font-weight-medium: 600;
     --font-weight-small: 500;
+
+    --box-shadow-default: 0px 2px 6px rgba(0, 0, 0, 0.04);
 }
 
 $primaryBackgroundColor: var(--background-color);
-$backgroundColorLight: var(--background-color-light);
+$backgroundColorContrast: var(--background-color-contrast);
+$backgroundColorLighter: var(--background-color-lighter);
+$backgroundColorDarker: var(--background-color-darker);
+$backgroundColorDarker20: var(--background-color-darker20);
+$backgroundColorDarker40: var(--background-color-darker40);
+
 $whiteTextColor: var(--white-color);
 $whiteTextDark30: var(--white-color-dark-30);
 $whiteTextDark75: var(--white-color-dark-75);
@@ -44,11 +71,14 @@ $primaryColorDark40: var(--primary-color-dark-40);
 $fontWeightMedium: var(--font-weight-medium);
 $fontWeightSmall: var(--font-weight-small);
 
-$greenColor: #22c55e;
-$redColor: #dc2626;
+$boxShadowDefault: var(--box-shadow-default);
+
+$greenColor: var(--green-color);
+$redColor: var(--red-color);
+$yellowColor: var(--yellow-color);
 
 $defaultFontSize: 1.6rem;
 $bigFontSize: 3.8rem;
-$defaultBorderRadius: 3px;
+$defaultBorderRadius: 6px;
 
 $defaultBasicElTransition: 0.15s ease-out;
