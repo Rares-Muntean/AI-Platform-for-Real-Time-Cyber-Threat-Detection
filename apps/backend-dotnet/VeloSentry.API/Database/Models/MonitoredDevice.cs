@@ -12,5 +12,7 @@
 
         public int UserId { get; set; }
         public User? User { get; set; }
+
+        public ICollection<ThreatAlert> ThreatAlerts { get; set; } = new List<ThreatAlert>();
     }
 }

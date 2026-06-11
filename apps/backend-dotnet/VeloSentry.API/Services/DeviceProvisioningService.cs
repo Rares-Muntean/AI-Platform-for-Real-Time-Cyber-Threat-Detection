@@ -119,7 +119,7 @@ namespace VeloSentry.API.Services
                     string enableServiceCmd = $"echo '{device.SshPassword}' | sudo -S mv {tempServicePath} /etc/systemd/system/velox.service && " +
                                               $"echo '{device.SshPassword}' | sudo -S systemctl daemon-reload && " +
                                               $"echo '{device.SshPassword}' | sudo -S systemctl enable velox && " +
-                                              $"echo '{device.SshPassword}' | sudo -S systemctl start velox";
+                                              $"echo '{device.SshPassword}' | sudo -S systemctl restart velox";
                     RunLoggedCommand(ssh, enableServiceCmd);
 
                     sftp.Disconnect();

@@ -49,6 +49,9 @@ namespace VeloSentry.API.Controllers
             }
 
             alert.UserId = device.UserId;
+            alert.MonitoredDeviceId = device.Id;
+
+            alert.UserId = device.UserId;
             _db.ThreatAlerts.Add(alert);
             await _db.SaveChangesAsync();
 

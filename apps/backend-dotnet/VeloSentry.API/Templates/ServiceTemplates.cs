@@ -4,7 +4,7 @@
     {
         public static string GetVeloxService(string remotePath)
         {
-            return $@"_
+            return $@"
 [Unit]
 Description=Velox Security Agent
 After=network.target

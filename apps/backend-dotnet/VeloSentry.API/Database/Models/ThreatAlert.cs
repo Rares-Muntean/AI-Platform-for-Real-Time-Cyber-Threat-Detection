@@ -13,5 +13,8 @@
 
         public int UserId { get; set; }
         public User? User { get; set; }
+
+        public int MonitoredDeviceId { get; set; }
+        public MonitoredDevice? MonitoredDevice { get; set; }
     }
 }

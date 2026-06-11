@@ -79,7 +79,6 @@
 }
 
 .status {
-    background-color: $greenColor;
     padding: 4px 12px;
     border-radius: 3px;
 
@@ -87,6 +86,14 @@
     letter-spacing: 0.4px;
     text-transform: uppercase;
     color: $primaryBackgroundColor;
+
+    &.active {
+        background-color: $greenColor;
+    }
+
+    &.installing {
+        background-color: $yellowColor;
+    }
 }
 
 .input-wrapper {
