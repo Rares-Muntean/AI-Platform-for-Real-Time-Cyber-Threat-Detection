@@ -1,12 +1,20 @@
 import * as signalr from "@microsoft/signalr";
 
+const connection = ref<signalr.HubConnection | null>(null);
+
 export const useSignalR = () => {
     const config = useRuntimeConfig();
     const baseUrl = config.public.apiBase;
-    const connection = ref<signalr.HubConnection | null>(null);
 
     const startConnection = () => {
         if (!import.meta.client) return;
+
+        if (
+            connection.value &&
+            connection.value.state !== signalr.HubConnectionState.Disconnected
+        ) {
+            return;
+        }
 
         connection.value = new signalr.HubConnectionBuilder()
             .withUrl(`${baseUrl}/hubs/velox`, {
@@ -33,11 +41,7 @@ export const useSignalR = () => {
         connection.value.on("DeviceStatusChanged", callback);
     };
 
-    const stopConnection = () => {
-        if (connection.value) {
-            connection.value.stop();
-        }
-    };
+    const stopConnection = () => {};
 
     return {
         startConnection,

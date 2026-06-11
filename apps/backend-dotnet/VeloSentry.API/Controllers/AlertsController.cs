@@ -1,9 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using VeloSentry.API.Database;
 using VeloSentry.API.Database.Models;
+using VeloSentry.API.Extensions;
 using VeloSentry.API.Hubs;
+
 
 namespace VeloSentry.API.Controllers
 {
@@ -21,20 +24,39 @@ namespace VeloSentry.API.Controllers
         }
 
         [HttpGet("all")]
+        [Authorize]
         public async Task<IActionResult> GetAlerts()
         {
-            List<ThreatAlert> alerts = await _db.ThreatAlerts.OrderByDescending(a => a.TimeStamp).Take(100).ToListAsync();
+            try
+            {
+                int userId = User.GetUserId();
+                List<ThreatAlert> alerts = await _db.ThreatAlerts.Where(a => a.UserId == userId).OrderByDescending(a => a.TimeStamp).Take(100).ToListAsync();
 
-            return Ok(alerts);
+                return Ok(alerts);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Unauthorized();
+            }
         }
 
         [HttpGet("last")]
+        [Authorize]
         public async Task<IActionResult> GetLastAlert()
         {
-            ThreatAlert? lastAlert = await _db.ThreatAlerts.OrderByDescending(a => a.TimeStamp).FirstOrDefaultAsync();
-            if (lastAlert == null) return NotFound(new { message = "No alerts found in database." });
+            try
+            {
+                int userId = User.GetUserId();
+                ThreatAlert? lastAlert = await _db.ThreatAlerts.Where(a => a.UserId == userId).OrderByDescending(a => a.TimeStamp).FirstOrDefaultAsync();
 
-            return Ok(lastAlert);
+                if (lastAlert == null) return NotFound(new { message = "No alerts found in database." });
+
+                return Ok(lastAlert);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Unauthorized();
+            }
         }
 
         [HttpPost("add")]
@@ -55,7 +77,7 @@ namespace VeloSentry.API.Controllers
             _db.ThreatAlerts.Add(alert);
             await _db.SaveChangesAsync();
 
-            await _hubContext.Clients.All.SendAsync("RecieveAlert", alert);
+            await _hubContext.Clients.User(device.UserId.ToString()).SendAsync("RecieveAlert", alert);
 
             return Ok(new { message = "Alert received successfully.", id = alert.Id });
         }

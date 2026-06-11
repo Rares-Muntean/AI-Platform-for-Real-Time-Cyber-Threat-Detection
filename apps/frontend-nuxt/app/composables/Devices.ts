@@ -5,8 +5,9 @@ export const useDevices = () => {
     const baseUrl = config.public.apiBase;
 
     const getDevices = async () => {
-        return await $fetch<MonitoredDevice[]>(`${baseUrl}/api/devices/all`, {
+        return await useFetch<MonitoredDevice[]>(`${baseUrl}/api/devices/all`, {
             method: "GET",
+            headers: useRequestHeaders(["cookie"]),
             credentials: "include",
         });
     };

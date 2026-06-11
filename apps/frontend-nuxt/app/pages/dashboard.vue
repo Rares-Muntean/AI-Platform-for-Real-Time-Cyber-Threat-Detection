@@ -7,7 +7,7 @@ definePageMeta({
 
 const { getHistory, getLast } = useAlerts();
 const { startConnection, onRecieveAlert, stopConnection } = useSignalR();
-const { data: alert, refresh, pending } = await getLast();
+const { data: alert, pending } = await getLast();
 
 const yAxisLabels = [70, 60, 50, 40, 30, 20, 10, 0];
 
@@ -41,7 +41,7 @@ function formatTimeStamp(val: string) {
     });
 }
 
-onMounted(() => {
+onMounted(async () => {
     startConnection();
 
     onRecieveAlert((newAlert) => {

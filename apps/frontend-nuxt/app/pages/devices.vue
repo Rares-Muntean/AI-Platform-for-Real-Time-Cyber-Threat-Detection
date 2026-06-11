@@ -3,9 +3,13 @@ import type { MonitoredDevice } from "~/types/types";
 
 const { registerDevice, getDevices, deleteDevice } = useDevices();
 const { startConnection, onDeviceStatusChanged, stopConnection } = useSignalR();
+const { data: devices, refresh } = await getDevices();
 
 const isModalOpened = ref(false);
-const devices = ref<MonitoredDevice[]>([]);
+
+if (!devices.value) {
+    devices.value = [];
+}
 
 const toggleModal = () => {
     isModalOpened.value = !isModalOpened.value;
@@ -21,14 +25,6 @@ const form: MonitoredDevice = reactive({
     lastHeartbeat: new Date(),
 });
 
-const loadDevices = async () => {
-    try {
-        devices.value = await getDevices();
-    } catch (e) {
-        console.error("Failed to fetch devices: ", e);
-    }
-};
-
 const handleSubmit = async () => {
     try {
         const newDevice = await registerDevice({
@@ -41,7 +37,7 @@ const handleSubmit = async () => {
             lastHeartbeat: form.lastHeartbeat,
         });
 
-        devices.value.push(newDevice);
+        await refresh();
 
         form.name = "";
         form.ipAddress = "";
@@ -56,19 +52,23 @@ const handleSubmit = async () => {
 
 const handleDelete = async (id: number) => {
     await deleteDevice(id);
-    await loadDevices();
+    await refresh();
 };
 
 onMounted(async () => {
-    await loadDevices();
     startConnection();
 
     onDeviceStatusChanged((data) => {
-        const device = devices.value.find((d) => d.id === data.id);
+        const device = devices.value?.find((d) => d.id === data.id);
         if (device) {
             device.status = data.status;
+            devices.value = [...(devices.value || [])];
         }
     });
+});
+
+onBeforeUnmount(() => {
+    stopConnection();
 });
 </script>
 

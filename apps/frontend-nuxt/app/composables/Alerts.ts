@@ -7,12 +7,16 @@ export const useAlerts = () => {
     const getHistory = async () => {
         return await useFetch<ThreatAlert>(`${baseUrl}/api/alerts/all`, {
             key: "alerts-history",
+            headers: useRequestHeaders(["cookie"]),
+            credentials: "include",
         });
     };
 
     const getLast = async () => {
         return await useFetch<ThreatAlert>(`${baseUrl}/api/alerts/last`, {
             key: "last-alert",
+            headers: useRequestHeaders(["cookie"]),
+            credentials: "include",
         });
     };
 

@@ -13,7 +13,7 @@ After=network.target
 Type=simple
 User=root
 WorkingDirectory={remotePath}
-ExecStart={remotePath}/velox-venv/bin/python3 {remotePath}/data_capture/sniffer.py
+ExecStart={remotePath}/velox-venv/bin/python3 -u {remotePath}/data_capture/sniffer.py
 Restart=always
 
 [Install]

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using NETCore.Encrypt;
 using VeloSentry.API.Database;
 using VeloSentry.API.Database.Models;
+using VeloSentry.API.Extensions;
 using VeloSentry.API.Hubs;
 using VeloSentry.API.Services;
 
@@ -30,8 +31,17 @@ namespace VeloSentry.API.Controllers
         [Authorize]
         public async Task<IActionResult> GetDevices()
         {
-            var devices = await _db.MonitoredDevices.OrderBy(d => d.Id).ToListAsync();
-            return Ok(devices);
+            try
+            {
+                int userId = User.GetUserId();
+                var devices = await _db.MonitoredDevices.Where(d => d.UserId == userId).OrderBy(d => d.Id).ToListAsync();
+
+                return Ok(devices);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Unauthorized();
+            }
         }
 
         [HttpPost("register")]
@@ -80,7 +90,9 @@ namespace VeloSentry.API.Controllers
                     scopedDb.Entry(dbDevice).State = EntityState.Modified;
                     await scopedDb.SaveChangesAsync();
 
-                    await _hubContext.Clients.All.SendAsync("DeviceStatusChanged", new { id = dbDevice.Id, status = dbDevice.Status });
+                    Console.WriteLine($"\n[SignalR] Broadcasting status change for Device {dbDevice.Id} to Active. Target User ID: {userId}");
+
+                    await _hubContext.Clients.User(userId.ToString()).SendAsync("DeviceStatusChanged", new { id = dbDevice.Id, status = dbDevice.Status });
                 }
 
             });
@@ -92,11 +104,20 @@ namespace VeloSentry.API.Controllers
         [Authorize]
         public async Task<IActionResult> DeleteDevice(int id)
         {
-            MonitoredDevice? device = await _db.MonitoredDevices.FindAsync(id);
-            if (device == null) return NotFound(new { message = "Device not found" });
+            try
+            {
+                int userId = User.GetUserId();
+                MonitoredDevice? device = await _db.MonitoredDevices.FirstOrDefaultAsync(d => d.Id == id && d.UserId == userId);
+                if (device == null) return NotFound(new { message = "Device not found" });
 
-            _db.MonitoredDevices.Remove(device);
-            await _db.SaveChangesAsync();
+                _db.MonitoredDevices.Remove(device);
+                await _db.SaveChangesAsync();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Unauthorized();
+            }
+
 
             return Ok(new { message = "Device deleted succesfully" });
         }
