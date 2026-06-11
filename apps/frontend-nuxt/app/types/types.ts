@@ -1,5 +1,6 @@
 // BACKEND TYPES
 export interface ThreatAlert {
+    id: number;
     sourceIp: string;
     destinationIp: string;
     destinationPort: number;

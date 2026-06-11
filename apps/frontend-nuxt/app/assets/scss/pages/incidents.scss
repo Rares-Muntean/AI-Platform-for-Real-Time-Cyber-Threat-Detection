@@ -1,0 +1,50 @@
+.table-container {
+    background: $backgroundColorLighter;
+    border-radius: $defaultBorderRadius;
+    padding: 0.6rem 1rem;
+    overflow-x: auto;
+
+    box-shadow: $boxShadowDefault;
+
+    .incidents-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+        font-size: 1.4rem;
+
+        th,
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid $backgroundColorContrast;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        th {
+            color: $whiteTextDark30;
+            font-weight: 500;
+        }
+
+        td {
+            &.score {
+                color: $redColor;
+                font-weight: bold;
+            }
+        }
+    }
+
+    .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        color: $whiteTextDark30;
+        min-height: 300px;
+        .spinner {
+            color: #38bdf8;
+        }
+    }
+}

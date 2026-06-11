@@ -5,8 +5,16 @@ export const useAlerts = () => {
     const baseUrl = config.public.apiBase;
 
     const getHistory = async () => {
-        return await useFetch<ThreatAlert>(`${baseUrl}/api/alerts/all`, {
+        return await useFetch<ThreatAlert[]>(`${baseUrl}/api/alerts/all`, {
             key: "alerts-history",
+            headers: useRequestHeaders(["cookie"]),
+            credentials: "include",
+        });
+    };
+
+    const getRecent = async () => {
+        return await useFetch<ThreatAlert[]>(`${baseUrl}/api/alerts/recent`, {
+            key: "alerts-recent",
             headers: useRequestHeaders(["cookie"]),
             credentials: "include",
         });
@@ -22,6 +30,7 @@ export const useAlerts = () => {
 
     return {
         getLast,
+        getRecent,
         getHistory,
     };
 };

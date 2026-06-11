@@ -1,12 +1,9 @@
-$anomalyChartHeight: 279px;
+$anomalyChartHeight: 281px;
 
 .dashboard-section {
     display: grid;
     grid-template-columns: repeat(12, 1fr);
     gap: 2.4rem;
-
-    font-size: 1.8rem;
-    align-items: start;
 }
 
 .anomaly-history {

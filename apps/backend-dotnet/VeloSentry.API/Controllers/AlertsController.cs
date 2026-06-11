@@ -40,6 +40,25 @@ namespace VeloSentry.API.Controllers
             }
         }
 
+        [HttpGet("recent")]
+        [Authorize]
+        public async Task<IActionResult> GetRecentAlerts()
+        {
+            try
+            {
+                int userId = User.GetUserId();
+                var fifteenMinutesAgo = DateTime.UtcNow.AddMinutes(-15);
+
+                List<ThreatAlert> alerts = await _db.ThreatAlerts.Where(a => a.UserId == userId && a.TimeStamp >= fifteenMinutesAgo).OrderByDescending(a => a.TimeStamp).ToListAsync();
+
+                return Ok(alerts);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Unauthorized();
+            }
+        }
+
         [HttpGet("last")]
         [Authorize]
         public async Task<IActionResult> GetLastAlert()

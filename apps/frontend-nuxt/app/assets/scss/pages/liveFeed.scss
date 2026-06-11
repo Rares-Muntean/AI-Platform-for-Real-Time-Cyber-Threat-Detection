@@ -1,0 +1,56 @@
+.feed-container {
+    background: $backgroundColorLighter;
+    border-radius: 8px;
+    padding: 1.5rem;
+    min-height: 400px;
+    max-height: 600px;
+    overflow-y: auto;
+    font-family: "SpaceMono", Courier, monospace;
+    box-shadow: $boxShadowDefault;
+
+    .feed-row {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid $backgroundColorContrast;
+        font-size: 1.3rem;
+
+        .feed-time {
+            color: #888;
+        }
+
+        .feed-badge {
+            padding: 2px 6px;
+            border-radius: 4px;
+
+            background: $backgroundColorContrast;
+            border: 1px solid $backgroundColorDarker40;
+        }
+
+        .score {
+            color: $redColor;
+            font-size: 1.4rem;
+        }
+
+        .info {
+            color: $primaryColor;
+            font-size: 1.4rem;
+        }
+    }
+
+    .empty-feed {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1.2rem;
+        color: $whiteTextDark30;
+        opacity: 0.6;
+        min-height: 350px;
+
+        .spinner {
+            color: $primaryColor;
+            opacity: 1;
+        }
+    }
+}

@@ -9,7 +9,9 @@ const { theme, toggleTheme } = useTheme();
 <template>
     <div class="section">
         <p class="panel-title">Settings</p>
-        <section class="settings-section">
+        <Separator class="primary" />
+
+        <div class="content settings-content">
             <div class="setting">
                 <div class="settings-info">
                     <p class="setting-title">
@@ -36,8 +38,31 @@ const { theme, toggleTheme } = useTheme();
                 </div>
             </div>
 
-            <Separator class="primary" />
-        </section>
+            <Separator class="primary settings-separator" />
+
+            <div class="setting">
+                <div class="settings-info">
+                    <p class="setting-title">Incident Alerts</p>
+                    <p class="setting-description">
+                        Configure threshold levels and delivery channels for
+                        real-time high-severity alerts.
+                    </p>
+                </div>
+
+                <div class="setting-button-container">
+                    <button class="btn ui-size" @click="">
+                        <Icon
+                            name="material-symbols:notifications-active-rounded"
+                            class="icon"
+                            size="16"
+                        />
+                        <p>Edit Rules</p>
+                    </button>
+                </div>
+            </div>
+
+            <Separator class="primary settings-separator" />
+        </div>
     </div>
 </template>
 

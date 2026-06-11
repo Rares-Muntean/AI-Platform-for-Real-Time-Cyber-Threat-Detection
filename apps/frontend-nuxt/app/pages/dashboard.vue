@@ -58,7 +58,8 @@ onBeforeUnmount(() => {
 <template>
     <div class="section">
         <p class="panel-title">Dashboard</p>
-        <section class="dashboard-section">
+        <Separator class="primary" />
+        <div class="content dashboard-section">
             <DashboardCard class="anomaly-history">
                 <template #title-card>
                     <p>ANOMALY HISTORY</p>
@@ -123,7 +124,7 @@ onBeforeUnmount(() => {
                     </div>
                 </template>
             </DashboardCard>
-        </section>
+        </div>
     </div>
 </template>
 

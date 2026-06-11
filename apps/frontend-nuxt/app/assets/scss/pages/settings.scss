@@ -1,10 +1,6 @@
-.settings-section {
-    display: flex;
-    flex-direction: column;
-
-    height: 100%;
-
-    gap: 1.9rem;
+.settings-content {
+    margin-top: 2.4rem;
+    padding: 0 16px;
 }
 
 .setting {
@@ -33,4 +29,8 @@
     font-size: 1.4rem;
     color: $whiteTextDark30;
     font-weight: $fontWeightSmall;
+}
+
+.settings-separator {
+    opacity: 0.7;
 }
