@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using NETCore.Encrypt;
 using VeloSentry.API.Database;
 using VeloSentry.API.Database.Models;
 using VeloSentry.API.Hubs;
@@ -16,12 +17,13 @@ namespace VeloSentry.API.Controllers
         private readonly AppDbContext _db;
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly IHubContext<VeloxHub> _hubContext;
-
-        public DevicesController(AppDbContext db, IServiceScopeFactory scopeFactory, IHubContext<VeloxHub> hubContext)
+        private readonly string _encryptionKey;
+        public DevicesController(AppDbContext db, IServiceScopeFactory scopeFactory, IHubContext<VeloxHub> hubContext, IConfiguration config)
         {
             _db = db;
             _scopeFactory = scopeFactory;
             _hubContext = hubContext;
+            _encryptionKey = config["Security:EncryptionKey"] ?? "VeloxSentry_Encrypt_key_32_Char!";
         }
 
         [HttpGet("all")]
@@ -43,6 +45,7 @@ namespace VeloSentry.API.Controllers
                 return Unauthorized(new { message = "Invalid user token." });
 
             int userId = int.Parse(userIdClaim);
+            device.SshPassword = EncryptProvider.AESEncrypt(device.SshPassword, _encryptionKey);
 
             device.UserId = userId;
             device.Status = "Installing";
@@ -63,6 +66,7 @@ namespace VeloSentry.API.Controllers
 
                     try
                     {
+                        dbDevice.SshPassword = EncryptProvider.AESDecrypt(dbDevice.SshPassword, _encryptionKey);
                         await provisionService.DeployAgentAsync(dbDevice);
                         dbDevice.Status = "Active";
                     }
@@ -72,6 +76,7 @@ namespace VeloSentry.API.Controllers
                         dbDevice.Status = "Failed";
                     }
 
+                    dbDevice.SshPassword = EncryptProvider.AESEncrypt(dbDevice.SshPassword, _encryptionKey);
                     scopedDb.Entry(dbDevice).State = EntityState.Modified;
                     await scopedDb.SaveChangesAsync();
 
