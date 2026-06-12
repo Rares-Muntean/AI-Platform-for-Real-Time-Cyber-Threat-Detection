@@ -31,6 +31,7 @@ export const useSignalR = () => {
 
     const onRecieveAlert = (callback: (alert: any) => void) => {
         if (!connection.value) return;
+        connection.value.off("RecieveAlert");
         connection.value.on("RecieveAlert", callback);
     };
 
@@ -38,6 +39,7 @@ export const useSignalR = () => {
         callback: (data: { id: number; status: string }) => void,
     ) => {
         if (!connection.value) return;
+        connection.value.off("DeviceStatusChanged");
         connection.value.on("DeviceStatusChanged", callback);
     };
 

@@ -6,11 +6,15 @@ definePageMeta({
 });
 
 const { getHistory } = useAlerts();
-const { data: incidents, pending } = await getHistory();
+const { data: incidents, pending, refresh } = await getHistory();
 
 if (!incidents.value) {
     incidents.value = [];
 }
+
+onMounted(async () => {
+    await refresh();
+});
 
 function formatTimeStamp(val: string) {
     if (!val) return "N/A";

@@ -5,9 +5,15 @@ definePageMeta({
     middleware: "auth",
 });
 
-const { getHistory, getLast } = useAlerts();
+const { getHistory, getLast, getRecent } = useAlerts();
 const { startConnection, onRecieveAlert, stopConnection } = useSignalR();
-const { data: alert, pending } = await getLast();
+
+const { data: alert, pending, refresh: refreshLast } = await getLast();
+const { data: recentAlerts, refresh: refreshRecent } = await getRecent();
+const { data: historyAlerts, refresh: refreshHistory } = await getHistory();
+
+const recentCount = ref(recentAlerts.value?.length || 0);
+const totalCount = ref(historyAlerts.value?.length || 0);
 
 const yAxisLabels = [70, 60, 50, 40, 30, 20, 10, 0];
 
@@ -42,11 +48,18 @@ function formatTimeStamp(val: string) {
 }
 
 onMounted(async () => {
+    await Promise.all([refreshLast(), refreshRecent(), refreshHistory()]);
+    recentCount.value = recentAlerts.value?.length || 0;
+    totalCount.value = historyAlerts.value?.length || 0;
+
     startConnection();
 
     onRecieveAlert((newAlert) => {
         console.log("New threat alert received via WebSocket: ", newAlert);
         alert.value = newAlert;
+
+        recentCount.value++;
+        totalCount.value++;
     });
 });
 
@@ -84,7 +97,21 @@ onBeforeUnmount(() => {
                 <template #title-card>
                     <p>ALERT COUNT</p>
                 </template>
-                <template #content> </template>
+                <template #content>
+                    <div class="alert-stats-container">
+                        <div class="stat-box warning">
+                            <span class="stat-number">{{ recentCount }}</span>
+                            <span class="stat-label">Last 15m</span>
+                        </div>
+
+                        <div class="stat-divider"></div>
+
+                        <div class="stat-box info">
+                            <span class="stat-number">{{ totalCount }}</span>
+                            <span class="stat-label">All Tracked</span>
+                        </div>
+                    </div>
+                </template>
             </DashboardCard>
 
             <DashboardCard class="last-alert">

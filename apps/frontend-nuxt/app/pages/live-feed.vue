@@ -9,7 +9,7 @@ definePageMeta({
 const { getRecent } = useAlerts();
 const { startConnection, onRecieveAlert, stopConnection } = useSignalR();
 
-const { data: liveAlerts } = await getRecent();
+const { data: liveAlerts, refresh } = await getRecent();
 
 if (!liveAlerts.value) {
     liveAlerts.value = [];
@@ -25,7 +25,8 @@ function formatTimeStamp(val: string) {
     });
 }
 
-onMounted(() => {
+onMounted(async () => {
+    await refresh();
     startConnection();
 
     onRecieveAlert((newAlert) => {

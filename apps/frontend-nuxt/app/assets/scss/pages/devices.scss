@@ -94,6 +94,10 @@
     &.installing {
         background-color: $yellowColor;
     }
+
+    &.failed {
+        background-color: $redColor;
+    }
 }
 
 .input-wrapper {

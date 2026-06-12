@@ -102,3 +102,43 @@ $anomalyChartHeight: 281px;
 .info-name {
     opacity: 0.75;
 }
+
+.alert-stats-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    height: 100%;
+    padding: 15px 0;
+}
+
+.stat-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+
+    .stat-number {
+        font-size: 2.2rem;
+        font-weight: 700;
+        line-height: 1;
+        margin-bottom: 6px;
+    }
+
+    &.warning .stat-number {
+        color: $yellowColor;
+    }
+
+    .stat-label {
+        font-size: 1.4rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: $whiteTextDark30;
+    }
+}
+
+.stat-divider {
+    width: 1px;
+    height: 45px;
+    background-color: $backgroundColorDarker40;
+}
