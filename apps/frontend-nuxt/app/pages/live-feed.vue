@@ -6,14 +6,9 @@ definePageMeta({
     middleware: "auth",
 });
 
-const { getRecent } = useAlerts();
+const store = useAlertsStore();
 const { startConnection, onRecieveAlert, stopConnection } = useSignalR();
-
-const { data: liveAlerts, refresh } = await getRecent();
-
-if (!liveAlerts.value) {
-    liveAlerts.value = [];
-}
+const liveAlerts = computed(() => store.recentAlerts);
 
 function formatTimeStamp(val: string) {
     if (!val) return "N/A";
@@ -26,17 +21,11 @@ function formatTimeStamp(val: string) {
 }
 
 onMounted(async () => {
-    await refresh();
+    await store.fetchRecent();
     startConnection();
 
     onRecieveAlert((newAlert) => {
-        liveAlerts.value?.unshift(newAlert);
-
-        if ((liveAlerts.value?.length || 0) > 50) {
-            liveAlerts.value?.pop();
-        }
-
-        liveAlerts.value = [...(liveAlerts.value || [])];
+        store.handleIncomingAlert(newAlert);
     });
 });
 

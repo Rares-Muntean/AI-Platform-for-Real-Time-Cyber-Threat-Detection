@@ -1,27 +1,26 @@
 <script lang="ts" setup>
 import { useSignalR } from "~/composables/SignalR";
+import { useAlertsStore } from "~/stores/alerts";
 import type { ThreatAlert } from "~/types/types";
-definePageMeta({
-    middleware: "auth",
-});
-
-const { getHistory, getLast, getRecent } = useAlerts();
-const { startConnection, onRecieveAlert, stopConnection } = useSignalR();
-
-const { data: alert, pending, refresh: refreshLast } = await getLast();
-const { data: recentAlerts, refresh: refreshRecent } = await getRecent();
-const { data: historyAlerts, refresh: refreshHistory } = await getHistory();
-
-const recentCount = ref(recentAlerts.value?.length || 0);
-const totalCount = ref(historyAlerts.value?.length || 0);
-
-const yAxisLabels = [70, 60, 50, 40, 30, 20, 10, 0];
 
 interface DisplayField {
     label: string;
     key: keyof ThreatAlert;
     format?: (val: any) => string;
 }
+
+definePageMeta({
+    middleware: "auth",
+});
+
+const store = useAlertsStore();
+const { startConnection, onRecieveAlert, stopConnection } = useSignalR();
+
+const recentCount = computed(() => store.recentAlerts.length);
+const totalCount = computed(() => store.historyAlerts.length);
+const alert = computed(() => store.lastAlert);
+
+const yAxisLabels = [70, 60, 50, 40, 30, 20, 10, 0];
 
 const displayFields: DisplayField[] = [
     { label: "Source IP", key: "sourceIp" },
@@ -48,18 +47,12 @@ function formatTimeStamp(val: string) {
 }
 
 onMounted(async () => {
-    await Promise.all([refreshLast(), refreshRecent(), refreshHistory()]);
-    recentCount.value = recentAlerts.value?.length || 0;
-    totalCount.value = historyAlerts.value?.length || 0;
+    await Promise.all([store.fetchRecent(), store.fetchHistory()]);
 
     startConnection();
 
     onRecieveAlert((newAlert) => {
-        console.log("New threat alert received via WebSocket: ", newAlert);
-        alert.value = newAlert;
-
-        recentCount.value++;
-        totalCount.value++;
+        store.handleIncomingAlert(newAlert);
     });
 });
 
@@ -140,10 +133,6 @@ onBeforeUnmount(() => {
                                 }}
                             </p>
                         </div>
-                    </div>
-
-                    <div v-else-if="pending" class="empty-state">
-                        <p>Syncing with server...</p>
                     </div>
 
                     <div v-else class="empty-state">
