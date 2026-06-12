@@ -47,7 +47,11 @@ function formatTimeStamp(val: string) {
 }
 
 onMounted(async () => {
-    await Promise.all([store.fetchRecent(), store.fetchHistory()]);
+    await Promise.all([
+        store.fetchRecent(),
+        store.fetchHistory(),
+        store.fetchLast(),
+    ]);
 
     startConnection();
 

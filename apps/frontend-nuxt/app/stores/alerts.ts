@@ -27,6 +27,15 @@ export const useAlertsStore = defineStore("alerts", () => {
         );
     };
 
+    const fetchLast = async () => {
+        lastAlert.value = await $fetch<ThreatAlert>(
+            `${baseUrl}/api/alerts/last`,
+            {
+                credentials: "include",
+            },
+        );
+    };
+
     const handleIncomingAlert = (newAlert: ThreatAlert) => {
         lastAlert.value = newAlert;
         recentAlerts.value.unshift(newAlert);
@@ -39,6 +48,7 @@ export const useAlertsStore = defineStore("alerts", () => {
         lastAlert,
         fetchRecent,
         fetchHistory,
+        fetchLast,
         handleIncomingAlert,
     };
 });

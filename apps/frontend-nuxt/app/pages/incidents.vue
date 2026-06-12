@@ -1,19 +1,13 @@
 <script lang="ts" setup>
-import type { ThreatAlert } from "~/types/types";
-
 definePageMeta({
     middleware: "auth",
 });
 
-const { getHistory } = useAlerts();
-const { data: incidents, pending, refresh } = await getHistory();
-
-if (!incidents.value) {
-    incidents.value = [];
-}
+const store = useAlertsStore();
+const incidents = computed(() => store.historyAlerts);
 
 onMounted(async () => {
-    await refresh();
+    await store.fetchHistory();
 });
 
 function formatTimeStamp(val: string) {
@@ -61,15 +55,6 @@ function formatTimeStamp(val: string) {
                         </tr>
                     </tbody>
                 </table>
-
-                <div v-else-if="pending" class="empty-state">
-                    <Icon
-                        name="svg-spinners:ring-resize"
-                        size="24"
-                        class="spinner"
-                    />
-                    <p>Loading threat history...</p>
-                </div>
 
                 <div v-else class="empty-state">
                     <p>No historical incidents found.</p>
