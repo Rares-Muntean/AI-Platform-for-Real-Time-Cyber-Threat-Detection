@@ -1,7 +1,7 @@
 import socket
 import time
 
-target_ip = "192.168.1.143"
+target_ip = "10.167.187.237"
 target_port = 22
 
 print(f"--- Simulating SSH Brute Force on {target_ip} ---")

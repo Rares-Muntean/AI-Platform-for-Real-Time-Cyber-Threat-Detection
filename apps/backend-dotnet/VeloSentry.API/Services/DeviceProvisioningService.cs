@@ -31,7 +31,7 @@ namespace VeloSentry.API.Services
                     RunLoggedCommand(ssh, $"mkdir -p {remotePath}");
 
                     Console.WriteLine("[SFTP] Starting directory upload...");
-                    string localSourcePath = @"E:\A.Projects\PROJECTS-LICENTA\VELOX\apps\backend-python";
+                    string localSourcePath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "backend-python"));
                     UploadDirectory(sftp, localSourcePath, remotePath);
                     Console.WriteLine("[SFTP] Directory upload complete.");
 
