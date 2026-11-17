@@ -1,20 +1,30 @@
-import sys
 import os
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-from helpers.request import report_threat_to_backend
-import numpy as np
-from scapy.layers.inet import IP, TCP, UDP
-from ai_model.cyber_ai import CyberAI
-from scapy.all import sniff
+import sys
 import time
 
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+import numpy as np
+from scapy.all import sniff
+from scapy.layers.inet import IP, TCP, UDP
+from ai_model.cyber_ai import CyberAI
+from helpers.config import load_config
+from helpers.firewall import FirewallManager
+from helpers.request import report_threat_to_backend
+
+cfg = load_config()
 alert_cooldowns = {}
 
 guard = CyberAI(input_dim=13)
 guard.load()
+
+firewall = FirewallManager(
+    enabled=cfg["firewall_enabled"],
+    block_duration=cfg["block_duration_seconds"],
+    whitelist_ips=cfg["whitelist_ips"],
+    protect_mgmt_ports=cfg["protect_management_ports"],
+)
+firewall.setup_chain()
 
 active_flows = {}
 PACKET_LIMIT = 50
@@ -27,32 +37,45 @@ def monitor_traffic(packet):
         src_ip = packet[IP].src
         dst_ip = packet[IP].dst
         proto = packet.proto
-        sport = packet[TCP].sport if packet.haslayer(TCP) else (packet[UDP].sport if packet.haslayer(UDP) else 0)
-        dport = packet[TCP].dport if packet.haslayer(TCP) else (packet[UDP].dport if packet.haslayer(UDP) else 0)
+        sport = (
+        packet[TCP].sport
+        if packet.haslayer(TCP)
+        else (packet[UDP].sport if packet.haslayer(UDP) else 0)
+    )
+        dport = (
+            packet[TCP].dport
+            if packet.haslayer(TCP)
+            else (packet[UDP].dport if packet.haslayer(UDP) else 0)
+        )
 
         if sport < 1024 and dport >= 1024:
-            forward_key = (dst_ip, src_ip, dport, sport, proto)
-            backward_key = (src_ip, dst_ip, sport, dport, proto)
-            actual_dport = sport
+          forward_key = (dst_ip, src_ip, dport, sport, proto)
+          backward_key = (src_ip, dst_ip, sport, dport, proto)
+          actual_dport = sport
         else:
-            forward_key = (src_ip, dst_ip, sport, dport, proto)
-            backward_key = (dst_ip, src_ip, dport, sport, proto)
-            actual_dport = dport
+          forward_key = (src_ip, dst_ip, sport, dport, proto)
+          backward_key = (dst_ip, src_ip, dport, sport, proto)
+          actual_dport = dport
 
         if forward_key in active_flows:
-            flow_key, is_forward = forward_key, True
+          flow_key, is_forward = forward_key, True
         elif backward_key in active_flows:
-            flow_key, is_forward = backward_key, False
+          flow_key, is_forward = backward_key, False
         else:
-            flow_key, is_forward = forward_key, True
-            active_flows[flow_key] = {
-                'start_time': now, 'last_time': now,
-                'fwd_pkts': 0, 'bwd_pkts': 0,
-                'fwd_bytes': 0, 'bwd_bytes': 0,
-                'flags': "", 'dport': actual_dport, 'proto': proto,
-                'src_ip': src_ip,
-                'dst_ip': dst_ip
-            }
+          flow_key, is_forward = forward_key, True
+          active_flows[flow_key] = {
+              "start_time": now,
+              "last_time": now,
+              "fwd_pkts": 0,
+              "bwd_pkts": 0,
+              "fwd_bytes": 0,
+              "bwd_bytes": 0,
+              "flags": "",
+              "dport": actual_dport,
+              "proto": proto,
+              "src_ip": forward_key[0],
+              "dst_ip": forward_key[1],
+          }
 
         flow = active_flows[flow_key]
         pkt_len = len(packet)
@@ -103,20 +126,64 @@ def predict_flow_threat(key):
     psh_flag = 1 if 'P' in flow['flags'] else 0
     ack_flag = 1 if 'A' in flow['flags'] else 0
 
-    ae_features = np.array([[dest_port, is_privileged_port, protocol, fwd_pkt_len_mean, bwd_pkt_len_mean,
-                             pkt_len_mean, flow_iat_mean, down_up_ratio,
-                             fin_flag, syn_flag, rst_flag, psh_flag, ack_flag]])
+    ae_features = np.array([[
+      dest_port,
+      is_privileged_port,
+      protocol,
+      fwd_pkt_len_mean,
+      bwd_pkt_len_mean,
+      pkt_len_mean,
+      flow_iat_mean,
+      down_up_ratio,
+      fin_flag,
+      syn_flag,
+      rst_flag,
+      psh_flag,
+      ack_flag,
+    ]])
 
     score, error_vector = guard.get_anomaly_score(ae_features)
     total_pkts = flow["fwd_pkts"] + flow["bwd_pkts"]
 
     if score > guard.threshold:
-        print(f"[!!!] ANOMALY DETECTED | Score: {score:.4f} | Port: {flow['dport']} | Pkts: {total_pkts}")
-
-        report_threat_to_backend(flow, total_pkts, score, alert_cooldowns)
+        print(
+            f"[!!!] ANOMALY DETECTED | Src: {flow['src_ip']} | Score: {score:.4f} |"
+            f" Port: {flow['dport']} | Pkts: {total_pkts}"
+        )
+        blocked = firewall.block_ip(flow["src_ip"])
+        report_threat_to_backend(
+            flow,
+            total_pkts,
+            score,
+            alert_cooldowns,
+            device_ip_override=cfg["device_ip_override"],
+            blocked=blocked,
+        )
     else:
-        print(f"[OK] Normal Traffic  | Score: {score:.4f} | Port: {flow['dport']} | Pkts: {total_pkts}")
+        print(
+            f"[OK] Normal Traffic  | Src: {flow['src_ip']} | Score: {score:.4f} |"
+            f" Port: {flow['dport']} | Pkts: {total_pkts}"
+        )
 
 
-print("Monitoring started. Awaiting traffic...")
-sniff(prn=monitor_traffic, store=0, filter="ip and not port 5284")
+if __name__ == "__main__":
+    iface = cfg["interface"]
+    bpf_filter = (
+      f"ip and not port 5284 and not port {cfg['control_port']}"
+    )
+    print("=================================================")
+    print("VELOX Agent Started")
+    print(f"Interface      : {iface if iface else 'ALL / Default'}")
+    print(f"Firewall       : {'ENABLED' if cfg['firewall_enabled'] else 'DISABLED'}")
+    print(f"Threshold      : {guard.threshold:.6f}")
+    print("=================================================")
+
+    try:
+        sniff_kwargs = {"prn": monitor_traffic, "store": 0, "filter": bpf_filter}
+        if iface:
+            sniff_kwargs["iface"] = iface
+        sniff(**sniff_kwargs)
+    except KeyboardInterrupt:
+        print("\nShutting down VELOX Agent...")
+    finally:
+        firewall.cleanup()

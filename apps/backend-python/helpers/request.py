@@ -1,9 +1,7 @@
-import datetime
-import time
-from datetime import datetime,timezone
-import requests
+from datetime import datetime, timezone
 import os
-import json
+import time
+import requests
 
 ########## BACKEND CONFIG ##########
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -25,7 +23,15 @@ API_BASE = f"http://{backend_ip}:5284/api/alerts/add"
 COOLDOWN_SECONDS = 60
 ####################################
 
-def report_threat_to_backend(flow, total_pkts, score, alert_cooldowns):
+
+def report_threat_to_backend(
+    flow,
+    total_pkts,
+    score,
+    alert_cooldowns,
+    device_ip_override=None,
+    blocked=False,
+):
     attacker_ip = flow["src_ip"]
     now = time.time()
 
@@ -37,18 +43,21 @@ def report_threat_to_backend(flow, total_pkts, score, alert_cooldowns):
     alert_cooldowns[attacker_ip] = now
 
     payload = {
-        "sourceIp": attacker_ip,
-        "destinationIp": flow["dst_ip"],
-        "destinationPort": int(flow["dport"]),
-        "protocol": int(flow["proto"]),
-        "anomalyScore": float(score),
-        "totalPackets": float(total_pkts),
-        "timeStamp": datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ') 
+      "sourceIp": attacker_ip,
+      "destinationIp": device_ip_override or flow["dst_ip"],
+      "destinationPort": int(flow["dport"]),
+      "protocol": int(flow["proto"]),
+      "anomalyScore": float(score),
+      "totalPackets": float(total_pkts),
+      "timeStamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+      "blockedByFirewall": bool(blocked),
     }
 
     try:
         response = requests.post(API_BASE, json=payload, timeout=5)
         if response.status_code == 200:
-            print(f"[API] Succesfully sent alert for {attacker_ip} to backend")
+            print(f"[API] Successfully sent alert for {attacker_ip} to backend")
+        else:
+          print(f"[API WARNING] Backend returned {response.status_code}: {response.text}")
     except Exception as e:
         print(f"[API ERROR] Could not reach C# backend: {e}")
