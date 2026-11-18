@@ -1,0 +1,12 @@
+{
+    "interface": null,
+    "capture_mode": "nfqueue",
+    "firewall_enabled": true,
+    "block_duration_seconds": 60,
+    "control_port": 5005,
+    "protect_management_ports": true,
+    "whitelist_ips": [
+        "127.0.0.1"
+    ],
+    "device_ip_override": null
+}

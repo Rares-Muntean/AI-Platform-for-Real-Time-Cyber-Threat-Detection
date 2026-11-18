@@ -13,11 +13,15 @@ from helpers.config import load_config
 from helpers.firewall import FirewallManager
 from helpers.request import report_threat_to_backend
 
+from helpers.control_server import start_control_server
+from ai_model.calibrator import AutoCalibrator
+
 cfg = load_config()
 alert_cooldowns = {}
 
 guard = CyberAI(input_dim=13)
 guard.load()
+calibrator = AutoCalibrator(guard, min_flows=5)
 
 firewall = FirewallManager(
     enabled=cfg["firewall_enabled"],
@@ -146,10 +150,17 @@ def predict_flow_threat(key):
       ack_flag,
     ]])
 
-    score, error_vector = guard.get_anomaly_score(ae_features)
     total_pkts = flow["fwd_pkts"] + flow["bwd_pkts"]
 
-    if score > guard.threshold:
+    if calibrator.is_recording():
+        calibrator.record_sample(ae_features[0])
+        return False
+
+    with calibrator.guard_lock:
+        score, error_vector = guard.get_anomaly_score(ae_features)
+        threshold = guard.threshold
+
+    if score > threshold:
         print(
             f"[!!!] ANOMALY DETECTED | Src: {flow['src_ip']} | Score: {score:.4f} |"
             f" Port: {flow['dport']} | Pkts: {total_pkts}"
@@ -174,6 +185,7 @@ def predict_flow_threat(key):
         return False
 
 def run_nfqueue_mode(iface):
+    # noinspection PyUnresolvedReferences
     from netfilterqueue import NetfilterQueue
     firewall.setup_nfqueue(queue_num=1, interface=iface)
     nfq = NetfilterQueue()
@@ -209,6 +221,8 @@ if __name__ == "__main__":
     print(f"Firewall       : {'ENABLED' if cfg['firewall_enabled'] else 'DISABLED'}")
     print(f"Threshold      : {guard.threshold:.6f}")
     print("=================================================")
+
+    start_control_server(cfg, firewall, calibrator, port=cfg["control_port"])
 
     try:
         if mode == "nfqueue":
