@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using NETCore.Encrypt;
+using System.Text;
+using System.Text.Json;
 using VeloSentry.API.Database;
 using VeloSentry.API.Database.Models;
 using VeloSentry.API.Extensions;
@@ -19,6 +21,11 @@ namespace VeloSentry.API.Controllers
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly IHubContext<VeloxHub> _hubContext;
         private readonly string _encryptionKey;
+        private static readonly HttpClient _agentClient = new HttpClient
+        {
+            Timeout = TimeSpan.FromSeconds(5)
+        };
+
         public DevicesController(AppDbContext db, IServiceScopeFactory scopeFactory, IHubContext<VeloxHub> hubContext, IConfiguration config)
         {
             _db = db;
@@ -100,6 +107,118 @@ namespace VeloSentry.API.Controllers
             return Ok(device);
         }
 
+        [HttpGet("status/{id}")]
+        [HttpPost("status/{id}")]
+        [Authorize]
+        public async Task<IActionResult> GetDeviceStatus(int id)
+        {
+            try
+            {
+                int userId = User.GetUserId();
+                var device = await _db.MonitoredDevices.FirstOrDefaultAsync(d => d.Id == id && d.UserId == userId);
+                if (device == null) return NotFound(new { message = "Device not found" });
+
+                try
+                {
+                    var response = await _agentClient.GetAsync($"http://{device.IpAddress}:5005/status");
+                    string json = await response.Content.ReadAsStringAsync();
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        return Ok(new { online = false, message = "Agent returned an error" });
+                    }
+
+                    using var doc = JsonDocument.Parse(json);
+                    return Ok(new { online = true, data = doc.RootElement.Clone() });
+                }
+                catch
+                {
+                    return Ok(new { online = false, message = "Agent control API unreachable" });
+                }
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Unauthorized();
+            }
+        }
+
+        [HttpPost("calibrate/{id}")]
+        [Authorize]
+        public async Task<IActionResult> CalibrateDevice(int id, [FromBody] CalibrateRequestDto request)
+        {
+            try
+            {
+                int userId = User.GetUserId();
+                var device = await _db.MonitoredDevices.FirstOrDefaultAsync(d => d.Id == id && d.UserId == userId);
+                if (device == null) return NotFound(new { message = "Device not found" });
+
+                var payload = JsonSerializer.Serialize(new
+                {
+                    duration = request.Duration,
+                    mode = string.IsNullOrWhiteSpace(request.Mode) ? "update" : request.Mode
+                });
+
+                var content = new StringContent(payload, Encoding.UTF8, "application/json");
+                var response = await _agentClient.PostAsync($"http://{device.IpAddress}:5005/calibrate", content);
+                string json = await response.Content.ReadAsStringAsync();
+
+                return new ContentResult
+                {
+                    Content = json,
+                    ContentType = "application/json",
+                    StatusCode = (int)response.StatusCode
+                };
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Unauthorized();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(503, new { message = $"Could not reach agent: {ex.Message}" });
+            }
+        }
+
+        [HttpPost("config/{id}")]
+        [Authorize]
+        public async Task<IActionResult> UpdateDeviceConfig(int id, [FromBody] AgentConfigDto request)
+        {
+            try
+            {
+                int userId = User.GetUserId();
+                var device = await _db.MonitoredDevices.FirstOrDefaultAsync(d => d.Id == id && d.UserId == userId);
+                if (device == null) return NotFound(new { message = "Device not found" });
+
+                var configBody = new Dictionary<string, object?>
+                {
+                    ["interface"] = string.IsNullOrWhiteSpace(request.Interface) ? null : request.Interface.Trim(),
+                    ["capture_mode"] = string.IsNullOrWhiteSpace(request.CaptureMode) ? "nfqueue" : request.CaptureMode.Trim(),
+                    ["firewall_enabled"] = request.FirewallEnabled,
+                    ["block_duration_seconds"] = request.BlockDurationSeconds,
+                    ["device_ip_override"] = string.IsNullOrWhiteSpace(request.DeviceIpOverride) ? null : request.DeviceIpOverride.Trim()
+                };
+
+                var content = new StringContent(JsonSerializer.Serialize(configBody), Encoding.UTF8, "application/json");
+                var response = await _agentClient.PostAsync($"http://{device.IpAddress}:5005/config", content);
+                string json = await response.Content.ReadAsStringAsync();
+
+                return new ContentResult
+                {
+                    Content = json,
+                    ContentType = "application/json",
+                    StatusCode = (int)response.StatusCode
+                };
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Unauthorized();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(503, new { message = $"Could not update agent config: {ex.Message}" });
+            }
+        }
+
         [HttpDelete("delete/{id}")]
         [Authorize]
         public async Task<IActionResult> DeleteDevice(int id)
@@ -121,5 +240,20 @@ namespace VeloSentry.API.Controllers
 
             return Ok(new { message = "Device deleted succesfully" });
         }
+    }
+
+    public class CalibrateRequestDto
+    {
+        public int Duration { get; set; } = 30;
+        public string Mode { get; set; } = "update";
+    }
+
+    public class AgentConfigDto
+    {
+        public string? Interface { get; set; }
+        public string CaptureMode { get; set; } = "nfqueue";
+        public bool FirewallEnabled { get; set; } = true;
+        public int BlockDurationSeconds { get; set; } = 60;
+        public string? DeviceIpOverride { get; set; }
     }
 }
