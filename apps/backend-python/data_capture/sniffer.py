@@ -1,5 +1,6 @@
 import os
 import sys
+import threading
 import time
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -98,8 +99,11 @@ def monitor_traffic(packet):
         total_pkts = flow['fwd_pkts'] + flow['bwd_pkts']
 
         if total_pkts >= PACKET_LIMIT or is_connection_done:
-            predict_flow_threat(flow_key)
+            is_anomaly = predict_flow_threat(flow_key)
             del active_flows[flow_key]
+            return is_anomaly
+
+        return False
 
 
 def predict_flow_threat(key):
@@ -151,23 +155,51 @@ def predict_flow_threat(key):
             f" Port: {flow['dport']} | Pkts: {total_pkts}"
         )
         blocked = firewall.block_ip(flow["src_ip"])
-        report_threat_to_backend(
-            flow,
-            total_pkts,
-            score,
-            alert_cooldowns,
-            device_ip_override=cfg["device_ip_override"],
-            blocked=blocked,
-        )
+        flow_copy = flow.copy()
+        threading.Thread(
+            target=report_threat_to_backend,
+            args=(flow_copy, total_pkts, score, alert_cooldowns),
+            kwargs={
+                "device_ip_override": cfg["device_ip_override"],
+                "blocked": blocked
+            },
+            daemon=True
+        ).start()
+        return True
     else:
         print(
             f"[OK] Normal Traffic  | Src: {flow['src_ip']} | Score: {score:.4f} |"
             f" Port: {flow['dport']} | Pkts: {total_pkts}"
         )
+        return False
+
+def run_nfqueue_mode(iface):
+    from netfilterqueue import NetfilterQueue
+    firewall.setup_nfqueue(queue_num=1, interface=iface)
+    nfq = NetfilterQueue()
+
+    def on_packet(pkt):
+        try:
+          scapy_pkt = IP(pkt.get_payload())
+          if monitor_traffic(scapy_pkt):
+            pkt.drop()
+          else:
+            pkt.accept()
+        except Exception as e:
+          print(f"[NFQUEUE ERROR] {e}")
+          pkt.accept()
+
+    nfq.bind(1, on_packet)
+    try:
+        nfq.run()
+    finally:
+        nfq.unbind()
+
 
 
 if __name__ == "__main__":
     iface = cfg["interface"]
+    mode = cfg["capture_mode"].lower()
     bpf_filter = (
       f"ip and not port 5284 and not port {cfg['control_port']}"
     )
@@ -179,10 +211,13 @@ if __name__ == "__main__":
     print("=================================================")
 
     try:
-        sniff_kwargs = {"prn": monitor_traffic, "store": 0, "filter": bpf_filter}
-        if iface:
-            sniff_kwargs["iface"] = iface
-        sniff(**sniff_kwargs)
+        if mode == "nfqueue":
+            run_nfqueue_mode(iface)
+        else:
+            sniff_kwargs = {"prn": monitor_traffic, "store": 0, "filter": bpf_filter}
+            if iface:
+                sniff_kwargs["iface"] = iface
+            sniff(**sniff_kwargs)
     except KeyboardInterrupt:
         print("\nShutting down VELOX Agent...")
     finally:

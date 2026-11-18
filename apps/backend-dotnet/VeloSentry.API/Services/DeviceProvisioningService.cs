@@ -29,6 +29,7 @@ namespace VeloSentry.API.Services
 
                     string remotePath = $"/home/{device.SshUsername}/backend-python";
                     RunLoggedCommand(ssh, $"mkdir -p {remotePath}");
+                    RunLoggedCommand(ssh, $"echo '{device.SshPassword}' | sudo -S chown -R {device.SshUsername}:{device.SshUsername} {remotePath}");
 
                     Console.WriteLine("[SFTP] Starting directory upload...");
                     string localSourcePath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "backend-python"));
@@ -85,7 +86,7 @@ namespace VeloSentry.API.Services
                     }
                     Console.WriteLine($"[SFTP] Dynamically configured agent with C# Host IP: {localIpAddress}");
 
-                    var checkCmd = ssh.RunCommand("if dpkg -s python3-pip python3-venv libpcap-dev >/dev/null 2>&1; then echo 'INSTALLED'; else echo 'MISSING'; fi");
+                    var checkCmd = ssh.RunCommand("if dpkg -s python3-pip python3-venv libpcap-dev build-essential python3-dev libnetfilter-queue-dev >/dev/null 2>&1; then echo 'INSTALLED'; else echo 'MISSING'; fi");
                     if (checkCmd.Result.Trim() == "INSTALLED")
                     {
                         Console.WriteLine("[SSH] System dependencies already satisfied. Skipping apt update/install.");
@@ -94,7 +95,7 @@ namespace VeloSentry.API.Services
                     {
                         Console.WriteLine("[SSH] Dependencies missing. Installing via apt...");
                         string installCmd = $"echo '{device.SshPassword}' | sudo -S apt-get -o DPkg::Lock::TimeoutInterval=120 update && " +
-                                            $"echo '{device.SshPassword}' | sudo -S apt-get -o DPkg::Lock::TimeoutInterval=120 install -y python3-pip python3-venv libpcap-dev";
+                        $"echo '{device.SshPassword}' | sudo -S apt-get -o DPkg::Lock::TimeoutInterval=120 install -y python3-pip python3-venv libpcap-dev build-essential python3-dev libnetfilter-queue-dev";
                         RunLoggedCommand(ssh, installCmd);
                     }
 

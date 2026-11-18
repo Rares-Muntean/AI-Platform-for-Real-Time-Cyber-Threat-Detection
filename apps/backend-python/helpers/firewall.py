@@ -8,6 +8,8 @@ import time
 
 class FirewallManager:
   CHAIN_NAME = "VELOX_BLOCK"
+  NFQ_IN_CHAIN = "VELOX_NFQ_IN"
+  NFQ_OUT_CHAIN = "VELOX_NFQ_OUT"
 
   def __init__(
       self,
@@ -58,62 +60,43 @@ class FirewallManager:
         cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=check
     )
 
+  def create_rule_list(self, name, out_in = "-i"):
+      """Creates a new set of firewall rules, drops if exists already, adds rule to the newly created rule list"""
+      self._run(["iptables", "-N", name], check=False)
+      self._run(["iptables", "-F", name], check=True)
+      self._run(
+          ["iptables", "-A", name, out_in, "lo", "-j", "RETURN"],
+          check=True,
+      )
+
+  def skip_protected_ports(self, rule_name):
+      for proto_flag, port in [
+          ("--dport", "22"),
+          ("--sport", "5284"),
+          ("--dport", "5005"),
+      ]:
+          self._run(
+              [
+                  "iptables",
+                  "-A",
+                  rule_name,
+                  "-p",
+                  "tcp",
+                  proto_flag,
+                  port,
+                  "-j",
+                  "RETURN",
+              ],
+              check=True,
+          )
+
   def setup_chain(self):
     if not self.enabled or not self.is_linux_root:
       return
 
-    self._run(["iptables", "-N", self.CHAIN_NAME], check=False)
-    self._run(["iptables", "-F", self.CHAIN_NAME], check=True)
-
-    self._run(
-        ["iptables", "-A", self.CHAIN_NAME, "-i", "lo", "-j", "RETURN"],
-        check=True,
-    )
-
-    # Skip protected ports (FOR TESTING)
+    self.create_rule_list(self.CHAIN_NAME)
     if self.protect_mgmt_ports:
-      self._run(
-          [
-              "iptables",
-              "-A",
-              self.CHAIN_NAME,
-              "-p",
-              "tcp",
-              "--dport",
-              "22",
-              "-j",
-              "RETURN",
-          ],
-          check=True,
-      )
-      self._run(
-          [
-              "iptables",
-              "-A",
-              self.CHAIN_NAME,
-              "-p",
-              "tcp",
-              "--sport",
-              "5284",
-              "-j",
-              "RETURN",
-          ],
-          check=True,
-      )
-      self._run(
-          [
-              "iptables",
-              "-A",
-              self.CHAIN_NAME,
-              "-p",
-              "tcp",
-              "--dport",
-              "5005",
-              "-j",
-              "RETURN",
-          ],
-          check=True,
-      )
+        self.skip_protected_ports(self.CHAIN_NAME)
 
     check_jump = self._run(
         ["iptables", "-C", "INPUT", "-j", self.CHAIN_NAME], check=False
@@ -125,6 +108,86 @@ class FirewallManager:
         f"[FIREWALL] Initialized iptables chain '{self.CHAIN_NAME}' (auto-unban:"
         f" {self.block_duration}s)."
     )
+
+  def setup_nfqueue(self, queue_num=1, interface=None):
+      if not self.is_linux_root:
+          return
+
+      # INPUT
+      self.create_rule_list(self.NFQ_IN_CHAIN, "-i")
+
+      for proto_flag, port in [("--sport", "5284"), ("--dport", "5005")]:
+          self._run(
+              [
+                  "iptables",
+                  "-A",
+                  self.NFQ_IN_CHAIN,
+                  "-p",
+                  "tcp",
+                  proto_flag,
+                  port,
+                  "-j",
+                  "RETURN",
+              ],
+              check=True,
+          )
+
+      nfq_in_rule = ["iptables", "-A", self.NFQ_IN_CHAIN]
+      if interface:
+        nfq_in_rule += ["-i", interface]
+
+      nfq_in_rule += [
+          "-j",
+          "NFQUEUE",
+          "--queue-num",
+          str(queue_num),
+          "--queue-bypass"
+      ]
+      self._run(nfq_in_rule, check=True)
+
+      # OUTPUT
+      self.create_rule_list(self.NFQ_OUT_CHAIN, "-o")
+
+      for proto_flag, port in [("--dport", "5284"), ("--sport", "5005")]:
+          self._run(
+              [
+                  "iptables",
+                  "-A",
+                  self.NFQ_OUT_CHAIN,
+                  "-p",
+                  "tcp",
+                  proto_flag,
+                  port,
+                  "-j",
+                  "RETURN",
+              ],
+              check=True,
+          )
+
+      nfq_out_rule = ["iptables", "-A", self.NFQ_OUT_CHAIN]
+      if interface:
+          nfq_out_rule += ["-o", interface]
+
+      nfq_out_rule += [
+          "-j",
+          "NFQUEUE",
+          "--queue-num",
+          str(queue_num),
+          "--queue-bypass"
+      ]
+      self._run(nfq_out_rule, check=True)
+
+      if self._run(["iptables", "-C", "INPUT", "-j", self.NFQ_IN_CHAIN], check=False).returncode != 0:
+        pos = "2" if self.enabled else "1"
+        self._run(["iptables", "-I", "INPUT", pos, "-j", self.NFQ_IN_CHAIN], check=True)
+
+      if self._run(["iptables", "-C", "OUTPUT", "-j", self.NFQ_OUT_CHAIN], check=False).returncode != 0:
+         self._run(
+            ["iptables", "-I", "OUTPUT", "1", "-j", self.NFQ_OUT_CHAIN], check=True
+         )
+
+      print( f"[NFQUEUE] Inline firewall inspection active on Queue #{queue_num}"
+      " (--queue-bypass enabled).")
 
   def block_ip(self, ip):
     if not self.enabled:
@@ -174,15 +237,18 @@ class FirewallManager:
       print(f"[FIREWALL] Cooldown expired -> Unblocked {ip}")
 
   def cleanup(self):
-    if not self.enabled:
-      return
-    with self._lock:
-      for timer in self.active_blocks.values():
-        timer.cancel()
-      self.active_blocks.clear()
+      with self._lock:
+          for timer in self.active_blocks.values():
+              timer.cancel()
+          self.active_blocks.clear()
 
-    if self.is_linux_root:
-      self._run(["iptables", "-D", "INPUT", "-j", self.CHAIN_NAME], check=False)
-      self._run(["iptables", "-F", self.CHAIN_NAME], check=False)
-      self._run(["iptables", "-X", self.CHAIN_NAME], check=False)
-      print(f"[FIREWALL] Cleaned up iptables chain '{self.CHAIN_NAME}'.")
+      if self.is_linux_root:
+          for parent, chain in [
+              ("INPUT", self.NFQ_IN_CHAIN),
+              ("OUTPUT", self.NFQ_OUT_CHAIN),
+              ("INPUT", self.CHAIN_NAME),
+          ]:
+              self._run(["iptables", "-D", parent, "-j", chain], check=False)
+              self._run(["iptables", "-F", chain], check=False)
+              self._run(["iptables", "-X", chain], check=False)
+          print("[FIREWALL] Cleaned up all VELOX iptables & NFQUEUE chains.")
